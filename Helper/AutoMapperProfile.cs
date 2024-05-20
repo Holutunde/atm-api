@@ -9,8 +9,9 @@ namespace ATMAPI.Helper
   {
     public AutoMapperProfile()
     {
-        CreateMap<Account, AccountDto>().ReverseMap();
-        CreateMap<Account, AccountUpdateDto>().ReverseMap();
+        CreateMap<Account, AccountUpdateDto>();
+        CreateMap<Account, AccountDto>();
+        CreateMap<AccountDto, Account>();
     }
   }
 

@@ -31,6 +31,11 @@ namespace ATMAPI.Controllers
                 long accountNumber = (long)(random.NextDouble() * 9000000000) + 1000000000;
 
                 var newAccount = _mapper.Map<Account>(accountCreate);
+
+                if(newAccount.Pin.ToString().Length != 4 )
+                {
+                    return BadRequest("Invalid input. Enter valid 4 digit pin ");
+                } 
                 newAccount.AccountNumber = accountNumber;
                 newAccount.Balance = 0;
                 newAccount.OpeningDate = DateTime.Now;
@@ -45,6 +50,7 @@ namespace ATMAPI.Controllers
                 return StatusCode(500, $"Error creating account: {ex.Message}");
             }
         }
+
 
  
         [HttpPatch("patch/{AccountNumber}")]

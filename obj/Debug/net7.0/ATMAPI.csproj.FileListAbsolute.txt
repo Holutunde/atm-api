@@ -42,3 +42,4 @@
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/ATMAPI/ATMAPI/bin/Debug/net7.0/runtimes/win/lib/net7.0/System.Drawing.Common.dll
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/ATMAPI/ATMAPI/bin/Debug/net7.0/runtimes/win/lib/net7.0/System.Security.Cryptography.Pkcs.dll
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/ATMAPI/ATMAPI/bin/Debug/net7.0/AutoMapper.dll
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/ATMAPI/ATMAPI/obj/Debug/net7.0/ATMAPI.sourcelink.json

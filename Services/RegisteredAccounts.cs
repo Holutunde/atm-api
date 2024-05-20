@@ -28,8 +28,8 @@ namespace ATMAPI.Services
                 // In the AddAccount method
                 worksheet.Cells[rowCount + 1, 1].Value = account.FirstName;
                 worksheet.Cells[rowCount + 1, 2].Value = account.LastName;
-                worksheet.Cells[rowCount + 1, 3].Value = account.AccountNumber;
-                worksheet.Cells[rowCount + 1, 4].Value = account.Pin;
+                worksheet.Cells[rowCount + 1, 3].Value = Convert.ToInt64(account.AccountNumber);
+                worksheet.Cells[rowCount + 1, 4].Value = Convert.ToInt32(account.Pin);
                 worksheet.Cells[rowCount + 1, 5].Value = account.Balance;
                 worksheet.Cells[rowCount + 1, 6].Value = account.OpeningDate.ToString("M/d/yyyy h:mm:ss tt");
 
@@ -45,7 +45,13 @@ namespace ATMAPI.Services
 
         public void UpdateAccount(Account updatedAccount)
         {
-            FileInfo fileInfo = new FileInfo(ExcelFilePath);
+            FileInfo fileInfo = new(ExcelFilePath);
+            if (!fileInfo.Exists)
+            {
+                Console.WriteLine("Excel file does not exist.");
+                return;
+            }
+
             try
             {
                 using ExcelPackage package = new ExcelPackage(fileInfo);
@@ -57,29 +63,29 @@ namespace ATMAPI.Services
                 }
 
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
+                bool accountFound = false;
 
-                int rowIndex = 0;
-                for (int i = 1; i <= rowCount; i++)
+                for (int i = 2; i <= rowCount; i++) 
                 {
-                    if (worksheet.Cells[i, 2].Value?.ToString() == updatedAccount.AccountNumber.ToString())
+                    if (worksheet.Cells[i, 3].Value?.ToString() == updatedAccount.AccountNumber.ToString())
                     {
-                        rowIndex = i;
+                        worksheet.Cells[i, 1].Value = updatedAccount.FirstName;
+                        worksheet.Cells[i, 2].Value = updatedAccount.LastName;
+                        worksheet.Cells[i, 3].Value = updatedAccount.AccountNumber;
+                        worksheet.Cells[i, 4].Value = updatedAccount.Pin;
+                        worksheet.Cells[i, 5].Value = updatedAccount.Balance;
+                        worksheet.Cells[i, 6].Value = updatedAccount.OpeningDate;
+
+                        accountFound = true;
                         break;
                     }
                 }
 
-                if (rowIndex == 0)
+                if (!accountFound)
                 {
                     Console.WriteLine("Account not found in the worksheet.");
                     return;
                 }
-
-                worksheet.Cells[rowIndex, 1].Value = updatedAccount.FirstName;
-                worksheet.Cells[rowIndex, 2].Value = updatedAccount.LastName;
-                worksheet.Cells[rowIndex, 3].Value = updatedAccount.AccountNumber;
-                worksheet.Cells[rowIndex, 4].Value = updatedAccount.Pin;
-                worksheet.Cells[rowIndex, 5].Value = updatedAccount.Balance;
-                worksheet.Cells[rowIndex, 6].Value = updatedAccount.OpeningDate;
 
                 package.Save();
                 Console.WriteLine("Account updated successfully.");
@@ -89,9 +95,55 @@ namespace ATMAPI.Services
                 Console.WriteLine($"Error updating account: {ex.Message}");
             }
         }
-    
 
-    public ICollection<Account> GetAccounts()
+        // public void UpdateAccount(Account updatedAccount)
+        // {
+        //     FileInfo fileInfo = new FileInfo(ExcelFilePath);
+        //     try
+        //     {
+        //         using ExcelPackage package = new ExcelPackage(fileInfo);
+        //         ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
+        //         if (worksheet == null)
+        //         {
+        //             Console.WriteLine("Accounts worksheet not found.");
+        //             return;
+        //         }
+
+        //         int rowCount = worksheet.Dimension?.Rows ?? 0;
+
+        //         int rowIndex = 0;
+        //         for (int i = 1; i <= rowCount; i++)
+        //         {
+        //             if (worksheet.Cells[i, 2].Value?.ToString() == updatedAccount.AccountNumber.ToString())
+        //             {
+        //                 rowIndex = i;
+        //                 break;
+        //             }
+        //         }
+
+        //         if (rowIndex == 0)
+        //         {
+        //             Console.WriteLine("Account not found in the worksheet.");
+        //             return;
+        //         }
+
+        //         worksheet.Cells[rowIndex, 1].Value = updatedAccount.FirstName;
+        //         worksheet.Cells[rowIndex, 2].Value = updatedAccount.LastName;
+        //         worksheet.Cells[rowIndex, 3].Value = updatedAccount.AccountNumber;
+        //         worksheet.Cells[rowIndex, 4].Value = updatedAccount.Pin;
+        //         worksheet.Cells[rowIndex, 5].Value = updatedAccount.Balance;
+        //         worksheet.Cells[rowIndex, 6].Value = updatedAccount.OpeningDate;
+
+        //         package.Save();
+        //         Console.WriteLine("Account updated successfully.");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Console.WriteLine($"Error updating account: {ex.Message}");
+        //     }
+        // }
+
+        public ICollection<Account> GetAccounts()
         {
             ICollection<Account> accounts = new List<Account>();
 
