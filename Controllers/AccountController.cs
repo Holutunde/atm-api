@@ -14,11 +14,13 @@ namespace ATMAPI.Controllers
     {
         private readonly IRegisteredAccountsService _registeredAccountsService;
         private readonly IMapper _mapper;
+        private readonly JwtTokenService _jwtTokenService;
 
-        public AccountsController(IRegisteredAccountsService registeredAccountsService, IMapper mapper)
+        public AccountsController(IRegisteredAccountsService registeredAccountsService, IMapper mapper, JwtTokenService jwtTokenService)
         {
             _registeredAccountsService = registeredAccountsService;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         [HttpPost("create")]
@@ -42,7 +44,7 @@ namespace ATMAPI.Controllers
 
                 _registeredAccountsService.AddAccount(newAccount);
 
-                return Ok($"Account created successfully ");
+                return Ok($"Account created successfully with {newAccount.AccountNumber}");
 
             }
             catch (Exception ex)
@@ -51,40 +53,49 @@ namespace ATMAPI.Controllers
             }
         }
 
+        [HttpPost("login")]
+        public IActionResult LoginAccount([FromBody] LoginDto loginAccount)
+        {
+            try
+            {
+                var account = _registeredAccountsService.GetAccountByNumber(loginAccount.AccountNumber);
 
- 
-        [HttpPatch("patch/{AccountNumber}")]
-        public IActionResult PatchAccountDetails(long AccountNumber, [FromBody] AccountUpdateDto accountPatch)
+                if (account == null || account.Pin != loginAccount.Pin)
+                {
+                    return Unauthorized("Invalid account number or PIN");
+                }
+
+                // Generate JWT token
+                var accesstoken = _jwtTokenService.GenerateToken(account.AccountNumber);
+
+                return Ok(new { Token = accesstoken });
+
+            }
+            catch (Exception ex)
+            {
+               return StatusCode(500, $"Error during login: {ex.Message}");
+            }
+        }
+
+
+        [HttpGet("singleAccount/{accountNumber}")]
+        [ProducesResponseType(200)]
+        public IActionResult GetAccountByAccountNumber(long AccountNumber)
         {
             try
             {
                 var account = _registeredAccountsService.GetAccountByNumber(AccountNumber);
 
-               Console.WriteLine(account.FirstName);
-                if (account == null)
-                {
-                    return NotFound($"Account with number {AccountNumber} not found.");
-                }
-        
-                if (accountPatch.FirstName != null)
-                    account.FirstName = accountPatch.FirstName;
+                // var accountDtos = _mapper.Map<List<AccountDto>>(account);
 
-                if (accountPatch.LastName != null)
-                    account.LastName = accountPatch.LastName;
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-                if (accountPatch.Pin.HasValue)
-                    account.Pin = accountPatch.Pin.Value;
-
-                if (accountPatch.Balance.HasValue)
-                    account.Balance = accountPatch.Balance.Value;
-
-                _registeredAccountsService.UpdateAccount(account);
-
-                return Ok("Account patched successfully");
+                return Ok(account);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error patching account: {ex.Message}");
+                return StatusCode(500, $"Error retrieving accounts: {ex.Message}");
             }
         }
 
@@ -100,6 +111,11 @@ namespace ATMAPI.Controllers
                     return NotFound($"Account with number {accountNumber} not found.");
                 }
 
+                if (account.Pin.ToString().Length != 4)
+                {
+                    return BadRequest("Invalid input. Enter valid 4 digit pin ");
+                }
+
                 _mapper.Map(accountUpdate, account);
                 _registeredAccountsService.UpdateAccount(account);
 
@@ -111,6 +127,32 @@ namespace ATMAPI.Controllers
             }
         }
 
+
+        // [HttpPatch("patch/{accountNumber}")]
+        // public IActionResult PatchAccountDetails([FromRoute] long accountNumber, [FromBody] JsonPatchDocument<AccountUpdateDto> accountPatch)
+        // {
+        //     try
+        //     {
+        //         var account = _registeredAccountsService.GetAccountByNumber(accountNumber);
+
+        //         if (account == null)
+        //         {
+        //             return NotFound($"Account with number {accountNumber} not found.");
+        //         }
+
+        //         var accountUpdateDto = _mapper.Map<AccountUpdateDto>(account);
+        //         accountPatch.ApplyTo(accountUpdateDto);
+        //         _mapper.Map(accountUpdateDto, account);
+
+        //         _registeredAccountsService.UpdateAccount(account);
+
+        //         return Ok("Account patched successfully");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, $"Error patching account: {ex.Message}");
+        //     }
+        // }
         [HttpGet("all")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Account>))]
         public IActionResult GetAccounts()
@@ -132,26 +174,6 @@ namespace ATMAPI.Controllers
             }
         }
 
-        [HttpGet("singleAccount/{AccountNumber}")]
-        [ProducesResponseType(200)]
-        public IActionResult GetAccountByAccountNumber(long AccountNumber)
-        {
-            try
-            {
-                 var account = _registeredAccountsService.GetAccountByNumber(AccountNumber);
-
-                // var accountDtos = _mapper.Map<List<AccountDto>>(account);
-
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                return Ok(account);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error retrieving accounts: {ex.Message}");
-            }
-        }
 
         
     }

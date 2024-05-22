@@ -147,7 +147,7 @@ namespace ATMAPI.Services
         {
             ICollection<Account> accounts = new List<Account>();
 
-            FileInfo fileInfo = new FileInfo(ExcelFilePath);
+            FileInfo fileInfo = new(ExcelFilePath);
             if (!fileInfo.Exists)
             {
                 Console.WriteLine("Excel file does not exist.");
@@ -156,7 +156,7 @@ namespace ATMAPI.Services
 
             try
             {
-                using ExcelPackage package = new ExcelPackage(fileInfo);
+                using ExcelPackage package = new(fileInfo);
                 ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
                 if (worksheet != null && worksheet.Dimension != null)
                 {

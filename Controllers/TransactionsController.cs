@@ -51,7 +51,7 @@ namespace ATMAPI.Controllers
             sourceAccount.Balance -= transferDto.Amount;
             targetAccount.Balance += transferDto.Amount;
 
-         Console.WriteLine(targetAccount.Balance);
+          Console.WriteLine(targetAccount.Balance);
 
             _registeredAccountsService.UpdateAccount(sourceAccount);
             _registeredAccountsService.UpdateAccount(targetAccount);
