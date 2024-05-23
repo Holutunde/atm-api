@@ -10,10 +10,10 @@ namespace ATMAPI.Models
             public long AccountNumber { get; set; }
             public int Pin { get; set; }
             public double Balance { get; set; }
-
+       
             public DateTime OpeningDate { get; set; }
-
-        }
+            public string Role { get; set; } = "User";
+    }
 
     
 }

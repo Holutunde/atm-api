@@ -15,6 +15,9 @@ namespace ATMAPI.Helper
         CreateMap<AccountDto, Account>();
         CreateMap<Account, AccountDetailsDto>();
         CreateMap<AccountDetailsDto, Account>();
+        CreateMap<Admin, AccountDto>();
+        CreateMap<AccountDto, Admin>();
+        
     }
   }
 

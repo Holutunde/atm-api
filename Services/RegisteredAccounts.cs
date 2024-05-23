@@ -32,6 +32,41 @@ namespace ATMAPI.Services
                 worksheet.Cells[rowCount + 1, 4].Value = Convert.ToInt32(account.Pin);
                 worksheet.Cells[rowCount + 1, 5].Value = account.Balance;
                 worksheet.Cells[rowCount + 1, 6].Value = account.OpeningDate.ToString("M/d/yyyy h:mm:ss tt");
+                worksheet.Cells[rowCount + 1, 7].Value = account.Role; 
+
+
+                package.Save();
+                Console.WriteLine("Account added successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving account: {ex.Message}");
+            }
+        }
+        public void AddAdmin(Admin account)
+        {
+
+            Console.WriteLine(account.AccountNumber);
+            string directoryPath = Path.GetDirectoryName(ExcelFilePath);
+            if (!Directory.Exists(directoryPath))
+            {
+                _ = Directory.CreateDirectory(directoryPath);
+            }
+
+            FileInfo fileInfo = new(ExcelFilePath);
+            try
+            {
+                using ExcelPackage package = new(fileInfo);
+                ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault() ?? package.Workbook.Worksheets.Add("Accounts");
+                int rowCount = worksheet.Dimension?.Rows ?? 0;
+                // In the AddAccount method
+                worksheet.Cells[rowCount + 1, 1].Value = account.FirstName;
+                worksheet.Cells[rowCount + 1, 2].Value = account.LastName;
+                worksheet.Cells[rowCount + 1, 3].Value = Convert.ToInt64(account.AccountNumber);
+                worksheet.Cells[rowCount + 1, 4].Value = Convert.ToInt32(account.Pin);
+                worksheet.Cells[rowCount + 1, 5].Value = account.Balance;
+                worksheet.Cells[rowCount + 1, 6].Value = account.OpeningDate.ToString("M/d/yyyy h:mm:ss tt");
+                worksheet.Cells[rowCount + 1, 7].Value = account.Role; 
 
 
                 package.Save();
@@ -75,6 +110,7 @@ namespace ATMAPI.Services
                         worksheet.Cells[i, 4].Value = updatedAccount.Pin;
                         worksheet.Cells[i, 5].Value = updatedAccount.Balance;
                         worksheet.Cells[i, 6].Value = updatedAccount.OpeningDate;
+                        worksheet.Cells[i, 7].Value = updatedAccount.Role;
 
                         accountFound = true;
                         break;
@@ -96,52 +132,6 @@ namespace ATMAPI.Services
             }
         }
 
-        // public void UpdateAccount(Account updatedAccount)
-        // {
-        //     FileInfo fileInfo = new FileInfo(ExcelFilePath);
-        //     try
-        //     {
-        //         using ExcelPackage package = new ExcelPackage(fileInfo);
-        //         ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
-        //         if (worksheet == null)
-        //         {
-        //             Console.WriteLine("Accounts worksheet not found.");
-        //             return;
-        //         }
-
-        //         int rowCount = worksheet.Dimension?.Rows ?? 0;
-
-        //         int rowIndex = 0;
-        //         for (int i = 1; i <= rowCount; i++)
-        //         {
-        //             if (worksheet.Cells[i, 2].Value?.ToString() == updatedAccount.AccountNumber.ToString())
-        //             {
-        //                 rowIndex = i;
-        //                 break;
-        //             }
-        //         }
-
-        //         if (rowIndex == 0)
-        //         {
-        //             Console.WriteLine("Account not found in the worksheet.");
-        //             return;
-        //         }
-
-        //         worksheet.Cells[rowIndex, 1].Value = updatedAccount.FirstName;
-        //         worksheet.Cells[rowIndex, 2].Value = updatedAccount.LastName;
-        //         worksheet.Cells[rowIndex, 3].Value = updatedAccount.AccountNumber;
-        //         worksheet.Cells[rowIndex, 4].Value = updatedAccount.Pin;
-        //         worksheet.Cells[rowIndex, 5].Value = updatedAccount.Balance;
-        //         worksheet.Cells[rowIndex, 6].Value = updatedAccount.OpeningDate;
-
-        //         package.Save();
-        //         Console.WriteLine("Account updated successfully.");
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Console.WriteLine($"Error updating account: {ex.Message}");
-        //     }
-        // }
 
         public ICollection<Account> GetAccounts()
         {
@@ -171,7 +161,8 @@ namespace ATMAPI.Services
                             AccountNumber = Convert.ToInt64(worksheet.Cells[row, 3].Value),
                             Pin = Convert.ToInt32(worksheet.Cells[row, 4].Value),
                             Balance = Convert.ToDouble(worksheet.Cells[row, 5].Value),
-                            OpeningDate = Convert.ToDateTime(worksheet.Cells[row, 6].Value)
+                            OpeningDate = Convert.ToDateTime(worksheet.Cells[row, 6].Value),
+                            Role = worksheet.Cells[row, 7].Value?.ToString()
                         };
                         accounts.Add(account);
                     }
@@ -193,6 +184,53 @@ namespace ATMAPI.Services
         {
             var accounts = GetAccounts();
             return accounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+        }
+
+        public void DeleteAccount(long accountNumber)
+        {
+            FileInfo fileInfo = new(ExcelFilePath);
+            if (!fileInfo.Exists)
+            {
+                Console.WriteLine("Excel file does not exist.");
+                return;
+            }
+
+            try
+            {
+                using ExcelPackage package = new(fileInfo);
+                ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet == null)
+                {
+                    Console.WriteLine("Accounts worksheet not found.");
+                    return;
+                }
+
+                int rowCount = worksheet.Dimension?.Rows ?? 0;
+                bool accountFound = false;
+
+                for (int i = 2; i <= rowCount; i++)
+                {
+                    if (worksheet.Cells[i, 3].Value?.ToString() == accountNumber.ToString())
+                    {
+                        worksheet.DeleteRow(i);
+                        accountFound = true;
+                        break;
+                    }
+                }
+
+                if (!accountFound)
+                {
+                    Console.WriteLine("Account not found in the worksheet.");
+                    return;
+                }
+
+                package.Save();
+                Console.WriteLine("Account deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting account: {ex.Message}");
+            }
         }
     }
 

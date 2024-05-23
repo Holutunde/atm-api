@@ -40,6 +40,7 @@ builder.Services.AddAuthentication(options =>
 
 
 builder.Services.AddScoped<IRegisteredAccountsService, RegisteredAccountsService>();
+builder.Services.AddScoped<GetAccountNumberService>();
 builder.Services.AddSingleton(new JwtTokenService(configuration["Key"], issuer, audience));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

@@ -11,7 +11,6 @@ namespace ATMAPI.Services
         private readonly string _key;
         private readonly string _issuer;
         private readonly string _audience;
-    
 
         public JwtTokenService(string key, string issuer, string audience)
         {
@@ -20,7 +19,7 @@ namespace ATMAPI.Services
             _audience = audience;
         }
 
-        public string GenerateToken(long accountNumber)
+        public string GenerateToken(long accountNumber, string role)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_key);
@@ -28,7 +27,8 @@ namespace ATMAPI.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, accountNumber.ToString())
+                    new Claim(ClaimTypes.Name, accountNumber.ToString()),
+                    new Claim(ClaimTypes.Role, role)
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
                 Issuer = _issuer,
@@ -38,9 +38,5 @@ namespace ATMAPI.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
-
-        
     }
 }
-
-
