@@ -65,20 +65,19 @@ namespace ATMAPI.Controllers
                     return Unauthorized("Invalid account number or PIN");
                 }
 
+                var accountDetails = _mapper.Map<AccountDto>(account);
                 // Generate JWT token
-                var accesstoken = _jwtTokenService.GenerateToken(account.AccountNumber);
+                var accessToken = _jwtTokenService.GenerateToken(account.AccountNumber);
 
-                return Ok(new { Token = accesstoken });
-
+                return Ok(new { accountDetails, accessToken });
             }
             catch (Exception ex)
             {
-               return StatusCode(500, $"Error during login: {ex.Message}");
+                return StatusCode(500, $"Error during login: {ex.Message}");
             }
         }
 
-
-        [HttpGet("singleAccount/{accountNumber}")]
+            [HttpGet("singleAccount/{accountNumber}")]
         [ProducesResponseType(200)]
         public IActionResult GetAccountByAccountNumber(long AccountNumber)
         {
@@ -86,7 +85,7 @@ namespace ATMAPI.Controllers
             {
                 var account = _registeredAccountsService.GetAccountByNumber(AccountNumber);
 
-                // var accountDtos = _mapper.Map<List<AccountDto>>(account);
+                var accountDtos = _mapper.Map<List<AccountDto>>(account);
 
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
@@ -98,7 +97,8 @@ namespace ATMAPI.Controllers
                 return StatusCode(500, $"Error retrieving accounts: {ex.Message}");
             }
         }
-
+       
+        
         [HttpPut("update/{accountNumber}")]
         public IActionResult UpdateAccountDetails(long accountNumber, [FromBody] AccountDto accountUpdate)
         {

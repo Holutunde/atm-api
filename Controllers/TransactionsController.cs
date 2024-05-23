@@ -2,13 +2,16 @@ using ATMAPI.Dto;
 using ATMAPI.Models;
 using ATMAPI.Services;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Linq;
+using System.Security.Claims;
 
 namespace ATMAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/transaction")]
+    [Authorize]
     public class TransactionsController : ControllerBase
     {
         private readonly IRegisteredAccountsService _registeredAccountsService;
@@ -20,78 +23,113 @@ namespace ATMAPI.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("checkbalance/{accountNumber}")]
-        public IActionResult CheckBalance(long accountNumber)
+
+        [HttpGet("checkbalance")]
+        public IActionResult CheckBalance()
         {
-            var account = _registeredAccountsService.GetAccountByNumber(accountNumber);
-            if (account == null)
+            try
             {
-                return NotFound("Account not found");
+                GetAccountNumberService getAccountNumberService = new();
+                long accountNumber = getAccountNumberService.GetAccountNumberFromToken(User);
+                var account = _registeredAccountsService.GetAccountByNumber(accountNumber);
+
+                if (account == null)
+                {
+                    return NotFound("Account not found");
+                }
+
+                return Ok($"Your account balance is {account.Balance}");
             }
-
-            return Ok(account.Balance);
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
         }
-
         [HttpPost("transfer")]
         public IActionResult Transfer([FromBody] TransferDto transferDto)
         {
-            var sourceAccount = _registeredAccountsService.GetAccountByNumber(transferDto.SourceAccountNumber);
-            var targetAccount = _registeredAccountsService.GetAccountByNumber(transferDto.TargetAccountNumber);
-
-            if (sourceAccount == null || targetAccount == null)
+            try
             {
-                return NotFound("One or both accounts not found");
-            }
+                GetAccountNumberService getAccountNumberService = new();
+                long sourceAccountNumber = getAccountNumberService.GetAccountNumberFromToken(User);
+                var sourceAccount = _registeredAccountsService.GetAccountByNumber(sourceAccountNumber);
+                var targetAccount = _registeredAccountsService.GetAccountByNumber(transferDto.TargetAccountNumber);
 
-            if (sourceAccount.Balance < transferDto.Amount)
+                if (sourceAccount == null || targetAccount == null)
+                {
+                    return NotFound("One or both accounts not found");
+                }
+
+                if (sourceAccount.Balance < transferDto.Amount)
+                {
+                    return BadRequest("Insufficient funds");
+                }
+
+                sourceAccount.Balance -= transferDto.Amount;
+                targetAccount.Balance += transferDto.Amount;
+
+                _registeredAccountsService.UpdateAccount(sourceAccount);
+                _registeredAccountsService.UpdateAccount(targetAccount);
+
+                return Ok($"{transferDto.Amount} transferred successful to {targetAccount.AccountNumber}");
+            }
+            catch (UnauthorizedAccessException ex)
             {
-                return BadRequest("Insufficient funds");
+                return Unauthorized(ex.Message);
             }
-
-            sourceAccount.Balance -= transferDto.Amount;
-            targetAccount.Balance += transferDto.Amount;
-
-          Console.WriteLine(targetAccount.Balance);
-
-            _registeredAccountsService.UpdateAccount(sourceAccount);
-            _registeredAccountsService.UpdateAccount(targetAccount);
-
-            return Ok("Transfer successful ");
         }
 
         [HttpPost("deposit")]
         public IActionResult Deposit([FromBody] DepositDto depositDto)
         {
-            var account = _registeredAccountsService.GetAccountByNumber(depositDto.AccountNumber);
-            if (account == null)
+            try
             {
-                return NotFound("Account not found");
+                GetAccountNumberService getAccountNumberService = new();
+                long accountNumber = getAccountNumberService.GetAccountNumberFromToken(User);
+                var account = _registeredAccountsService.GetAccountByNumber(accountNumber);
+                if (account == null)
+                {
+                    return NotFound("Account not found");
+                }
+
+                account.Balance += depositDto.Amount;
+                _registeredAccountsService.UpdateAccount(account);
+
+                return Ok($"Deposit successful. Account balance is currently {account.Balance}");
             }
-
-            account.Balance += depositDto.Amount;
-            _registeredAccountsService.UpdateAccount(account);
-
-            return Ok("Deposit successful");
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
         }
 
         [HttpPatch("changepin")]
         public IActionResult ChangePin([FromBody] ChangePinDto changePinDto)
         {
-            var account = _registeredAccountsService.GetAccountByNumber(changePinDto.AccountNumber);
-            if (account == null)
+            try
             {
-                return NotFound("Account not found");
-            }
+                GetAccountNumberService getAccountNumberService = new();
+                long accountNumber = getAccountNumberService.GetAccountNumberFromToken(User);
+                var account = _registeredAccountsService.GetAccountByNumber(accountNumber);
+                if (account == null)
+                {
+                    return NotFound("Account not found");
+                }
 
-            if (account.Pin != changePinDto.OldPin)
+                if (account.Pin != changePinDto.OldPin)
+                {
+                    return BadRequest("Old PIN is incorrect");
+                }
+
+                account.Pin = changePinDto.NewPin;
+                _registeredAccountsService.UpdateAccount(account);
+
+                return Ok("PIN changed successfully");
+            }
+            catch (UnauthorizedAccessException ex)
             {
-                return BadRequest("Old PIN is incorrect");
+                return Unauthorized(ex.Message);
             }
-
-            account.Pin = changePinDto.NewPin;
-            _registeredAccountsService.UpdateAccount(account);
-
-            return Ok("PIN changed successfully");
         }
     }
 }
