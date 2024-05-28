@@ -42,7 +42,7 @@ namespace ATMAPI.Controllers
                 return StatusCode(500, $"Error retrieving account: {ex.Message}");
             }
         }
-        [HttpPut("update/{accountNumber}")]
+        [HttpPost("update/{accountNumber}")]
         public IActionResult UpdateAccountDetails(long accountNumber, [FromBody] AccountDto accountUpdate)
         {
             try
@@ -54,7 +54,7 @@ namespace ATMAPI.Controllers
                     return NotFound($"Account with number {accountNumber} not found.");
                 }
 
-                // Check and update each property if it's provided
+               
                 if (!string.IsNullOrEmpty(accountUpdate.FirstName))
                 {
                     account.FirstName = accountUpdate.FirstName;

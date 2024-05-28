@@ -60,6 +60,11 @@ namespace ATMAPI.Controllers
                     return NotFound("One or both accounts not found");
                 }
 
+                if(sourceAccountNumber == targetAccount.AccountNumber)
+                {
+                    return BadRequest("Cannot transfer to the same source account");
+                }
+
                 if (sourceAccount.Balance < transferDto.Amount)
                 {
                     return BadRequest("Insufficient funds");
@@ -103,7 +108,7 @@ namespace ATMAPI.Controllers
             }
         }
 
-        [HttpPatch("changepin")]
+        [HttpPost("changepin")]
         public IActionResult ChangePin([FromBody] ChangePinDto changePinDto)
         {
             try

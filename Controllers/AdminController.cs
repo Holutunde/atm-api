@@ -53,7 +53,7 @@ namespace ATMAPI.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("updateAdminDetails/{accountNumber}")]
+        [HttpPost("updateAdminDetails/{accountNumber}")]
         public IActionResult UpdateAdmin(long accountNumber, [FromBody] Admin admin)
         {
             var existingAdmin = _registeredAccountsService.GetAccountByNumber(accountNumber);
@@ -123,7 +123,7 @@ namespace ATMAPI.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("deleteAccount/{accountNumber}")]
+        [HttpPost("deleteAccount/{accountNumber}")]
         public IActionResult DeleteAdmin(long accountNumber)
         {
             var admin = _registeredAccountsService.GetAccountByNumber(accountNumber);
