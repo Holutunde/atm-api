@@ -5,6 +5,7 @@ namespace ATMAPI.Dto
         public string? FirstName { get; set; }     
         public string? LastName { get; set; }     
         public int Pin { get; set; }
+  
         
     }
 }

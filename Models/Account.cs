@@ -1,5 +1,6 @@
 ﻿
 using ATMAPI.Interfaces;
+using ATMAPI.Enum;
 
 namespace ATMAPI.Models
 {
@@ -12,7 +13,7 @@ namespace ATMAPI.Models
             public double Balance { get; set; }
        
             public DateTime OpeningDate { get; set; }
-            public string Role { get; set; } = "User";
+            public string Role { get; set; } = Roles.User.ToString();
     }
 
     

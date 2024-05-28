@@ -1,3 +1,5 @@
+using ATMAPI.Enum;
+
 namespace ATMAPI.Models
 {
     public class Admin
@@ -8,6 +10,6 @@ namespace ATMAPI.Models
         public int Pin { get; set; }
         public double Balance { get; set; }
         public DateTime OpeningDate { get; set; }
-        public string Role { get; set; } = "Admin";
+        public string Role { get; set; } = Roles.Admin.ToString();
     }
 }

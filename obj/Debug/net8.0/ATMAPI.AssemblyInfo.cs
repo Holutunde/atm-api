@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ATMAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+adf3e8aa33fe93207994bd186890fa05d224c882")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5a75984318ba7a7140b21eed6bda7725d318867a")]
 [assembly: System.Reflection.AssemblyProductAttribute("ATMAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ATMAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

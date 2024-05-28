@@ -1,5 +1,4 @@
 using AutoMapper;
-using ATMAPI.Models;
 using ATMAPI.Dto;
 using ATMAPI.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -43,7 +42,6 @@ namespace ATMAPI.Controllers
                 return StatusCode(500, $"Error retrieving account: {ex.Message}");
             }
         }
-
         [HttpPut("update/{accountNumber}")]
         public IActionResult UpdateAccountDetails(long accountNumber, [FromBody] AccountDto accountUpdate)
         {
@@ -56,12 +54,26 @@ namespace ATMAPI.Controllers
                     return NotFound($"Account with number {accountNumber} not found.");
                 }
 
-                if (accountUpdate.Pin.ToString().Length != 4)
+                // Check and update each property if it's provided
+                if (!string.IsNullOrEmpty(accountUpdate.FirstName))
                 {
-                    return BadRequest("Invalid input. Enter valid 4 digit pin");
+                    account.FirstName = accountUpdate.FirstName;
                 }
 
-                _mapper.Map(accountUpdate, account);
+                if (!string.IsNullOrEmpty(accountUpdate.LastName))
+                {
+                    account.LastName = accountUpdate.LastName;
+                }
+
+                if (accountUpdate.Pin != 0)
+                {
+                    if (accountUpdate.Pin.ToString().Length != 4)
+                    {
+                        return BadRequest("Invalid input. Enter valid 4 digit pin");
+                    }
+                    account.Pin = accountUpdate.Pin;
+                }
+
                 _registeredAccountsService.UpdateAccount(account);
 
                 return Ok("Account updated successfully");
@@ -72,6 +84,7 @@ namespace ATMAPI.Controllers
             }
         }
 
- 
+
+
     }
 }
