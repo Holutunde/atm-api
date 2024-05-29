@@ -66,7 +66,7 @@ namespace ATMAPI.Controllers
               
                 var accessToken = _jwtTokenService.GenerateToken(account.AccountNumber, account.Role);
 
-                return Ok(new {account, accountDetails, accessToken });
+                return Ok(new {accountDetails, accessToken });
             }
             catch (Exception ex)
             {

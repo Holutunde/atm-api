@@ -132,7 +132,6 @@ namespace ATMAPI.Controllers
                 return NotFound("Admin not found.");
             }
 
-            // Assuming you have a method to delete an account
             _registeredAccountsService.DeleteAccount(accountNumber);
             return NoContent();
         }

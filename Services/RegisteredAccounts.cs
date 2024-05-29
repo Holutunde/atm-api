@@ -154,6 +154,13 @@ namespace ATMAPI.Services
 
                     for (int row = 2; row <= rowCount; row++) // Assuming data starts from row 2
                     {
+                        var openingDateCellValue = worksheet.Cells[row, 6].Value?.ToString();
+                        if (!DateTime.TryParse(openingDateCellValue, out DateTime openingDate))
+                        {
+                            Console.WriteLine($"Error parsing date: {openingDateCellValue}");
+                            continue;
+                        }
+
                         Account account = new Account
                         {
                             FirstName = worksheet.Cells[row, 1].Value?.ToString(),
@@ -161,8 +168,8 @@ namespace ATMAPI.Services
                             AccountNumber = Convert.ToInt64(worksheet.Cells[row, 3].Value),
                             Pin = Convert.ToInt32(worksheet.Cells[row, 4].Value),
                             Balance = Convert.ToDouble(worksheet.Cells[row, 5].Value),
-                            OpeningDate = Convert.ToDateTime(worksheet.Cells[row, 6].Value),
-                            Role = worksheet.Cells[row, 7].Value?.ToString()
+                            OpeningDate = openingDate,
+                            Role = worksheet.Cells[row, 7].Value?.ToString() 
                         };
                         accounts.Add(account);
                     }

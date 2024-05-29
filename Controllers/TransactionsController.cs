@@ -53,6 +53,12 @@ namespace ATMAPI.Controllers
                 GetAccountNumberService getAccountNumberService = new();
                 long sourceAccountNumber = getAccountNumberService.GetAccountNumberFromToken(User);
                 var sourceAccount = _registeredAccountsService.GetAccountByNumber(sourceAccountNumber);
+                
+                if(transferDto.TargetAccountNumber.ToString().Length != 10)
+                {
+                    return BadRequest("Invalid input. Receiver account must be 10 figures");
+                }
+
                 var targetAccount = _registeredAccountsService.GetAccountByNumber(transferDto.TargetAccountNumber);
 
                 if (sourceAccount == null || targetAccount == null)
