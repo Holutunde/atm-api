@@ -6,8 +6,7 @@ using ATMAPI.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace ATMAPI.Controllers
 {
@@ -60,11 +59,25 @@ namespace ATMAPI.Controllers
             newAdmin.OpeningDate = DateTime.Now;
             newAdmin.AccountNumber = AccountNumber;
             newAdmin.Role = "Admin";
+            newAdmin.Password = BCrypt.Net.BCrypt.HashPassword(newAdmin.Password);
 
             var createdAdmin = await _adminRepository.Register(newAdmin);
 
             return Ok(new { createdAdmin });
         }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] OnlineLoginDto loginDto)
+        {
+            var admin = await _adminRepository.Login(loginDto);
+            if (admin == null)
+            {
+                return Unauthorized("Invalid credentials.");
+            }
+
+            var token = _jwtTokenService.GenerateToken(admin.Email);
+            return Ok(new { token });
+        }
+
 
         [Authorize(Roles = "Admin")]
         [HttpPost("updateAdminDetails/{id}")]

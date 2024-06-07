@@ -12,20 +12,22 @@ namespace ATMAPI.Controllers
 {
     [ApiController]
     [Route("api/user")]
-    public class UserController(IUserRepository userRepository, IMapper mapper, JwtTokenService jwtTokenService) : ControllerBase
+    public class UserController(
+        IUserRepository userRepository,
+        IMapper mapper,
+        JwtTokenService jwtTokenService
+    ) : ControllerBase
     {
         private readonly IUserRepository _userRepository = userRepository;
         private readonly IMapper _mapper = mapper;
         private readonly JwtTokenService _jwtTokenService = jwtTokenService;
-
-     
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserDto userDto)
         {
             if (userDto.Pin.ToString().Length != 4)
             {
-                return BadRequest("Invalid input. Enter valid 4 digit pin");
+                return BadRequest("Invalid input. Enter a valid 4-digit PIN.");
             }
 
             if (!ValidationHelper.IsValidEmail(userDto.Email))
@@ -35,7 +37,9 @@ namespace ATMAPI.Controllers
 
             if (!ValidationHelper.IsValidPassword(userDto.Password))
             {
-                return BadRequest("Password must be at least 7 characters long and contain at least one number and one special character.");
+                return BadRequest(
+                    "Password must be at least 7 characters long and contain at least one number and one special character."
+                );
             }
 
             var newUser = _mapper.Map<User>(userDto);
@@ -46,16 +50,17 @@ namespace ATMAPI.Controllers
                 return BadRequest("User email already exists.");
             }
 
-            Random random = new();
+            Random random = new Random();
             long AccountNumber = (long)(random.NextDouble() * 9000000000L) + 1000000000L;
             newUser.Balance = 0;
             newUser.OpeningDate = DateTime.Now;
             newUser.AccountNumber = AccountNumber;
             newUser.Role = "User";
+            newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
 
             var createdUser = await _userRepository.Register(newUser);
 
-            return Ok(new { createdUser });
+            return Created("", new { createdUser });
         }
 
         [HttpPost("login")]
