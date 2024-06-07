@@ -2,13 +2,13 @@ using ATMAPI.Models;
 
 namespace ATMAPI.Services
 {
-    public interface IRegisteredAccountsService
+    public interface IRegisteredUsersService
     {
-        void AddAccount(Account account); 
-        void AddAdmin(Admin account); 
-        ICollection<Account> GetAccounts();
-        Account GetAccountByNumber(long accountNumber);
-        void UpdateAccount(Account  updatedAccount);
-        void DeleteAccount(long accountNumber);
+        void AddUser(User User); 
+        void AddAdmin(Admin User); 
+        ICollection<User> GetUsers();
+        User GetUserByNumber(long AccountNumber);
+        void UpdateUser(User  updatedUser);
+        void DeleteUser(long AccountNumber);
     }
 }

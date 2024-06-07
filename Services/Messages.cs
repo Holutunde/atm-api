@@ -33,13 +33,13 @@ public class Messages
 
     public static void TransferSuccessful(double? amount, string? senderName, string? receiverName, double senderBalance)
     {
-        Console.WriteLine($"{amount} naira transferred successfully from {senderName}'s account to {receiverName}'s account.");
+        Console.WriteLine($"{amount} naira transferred successfully from {senderName}'s User to {receiverName}'s User.");
         Console.WriteLine($"Your new balance is: {senderBalance}");
     }
-   public static void AccoutCreatedSuccessfully(long accountNumber){
+   public static void AccoutCreatedSuccessfully(long AccountNumber){
 
-        Console.WriteLine("Account created successfully!");
-        Console.WriteLine($"Your account number is: {accountNumber}");
+        Console.WriteLine("User created successfully!");
+        Console.WriteLine($"Your User number is: {AccountNumber}");
     }
     public static void WithdrawSuccessful(double amount, double userBalance)
     {
@@ -51,11 +51,11 @@ public class Messages
     }
     public static void UpdatedPinSuccessful(string? userName)
     {
-        Console.WriteLine($"Pin updated successfully for account {userName}.");
+        Console.WriteLine($"Pin updated successfully for User {userName}.");
     }
 
-    public static void AccountNotFound()
+    public static void UserNotFound()
     {
-        Console.WriteLine("Account not found.");
+        Console.WriteLine("User not found.");
     }
 }

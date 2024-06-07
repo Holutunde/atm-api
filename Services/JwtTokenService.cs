@@ -19,7 +19,7 @@ namespace ATMAPI.Services
             _audience = audience;
         }
 
-        public string GenerateToken(long accountNumber, string role)
+        public string GenerateToken(string email)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_key);
@@ -27,8 +27,7 @@ namespace ATMAPI.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, accountNumber.ToString()),
-                    new Claim(ClaimTypes.Role, role)
+                    new Claim(ClaimTypes.Email, email)
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
                 Issuer = _issuer,

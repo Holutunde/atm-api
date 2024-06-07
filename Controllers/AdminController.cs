@@ -1,9 +1,13 @@
+using ATMAPI.Dto;
+using ATMAPI.Helpers;
+using ATMAPI.Interfaces;
 using ATMAPI.Models;
 using ATMAPI.Services;
 using AutoMapper;
-using ATMAPI.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ATMAPI.Controllers
 {
@@ -11,128 +15,124 @@ namespace ATMAPI.Controllers
     [Route("api/admin")]
     public class AdminController : ControllerBase
     {
-
-        private readonly IRegisteredAccountsService _registeredAccountsService;
+        private readonly IAdminRepository _adminRepository;
         private readonly IMapper _mapper;
         private readonly JwtTokenService _jwtTokenService;
 
-        public AdminController(IRegisteredAccountsService registeredAccountsService, IMapper mapper, JwtTokenService jwtTokenService)
+        public AdminController(IAdminRepository adminRepository, IMapper mapper, JwtTokenService jwtTokenService)
         {
-            _registeredAccountsService = registeredAccountsService;
+            _adminRepository = adminRepository;
             _mapper = mapper;
             _jwtTokenService = jwtTokenService;
         }
 
         [HttpPost("create")]
-        public IActionResult CreateAdmin([FromBody] AccountDto admin)
+        public async Task<IActionResult> CreateAdmin([FromBody] AdminDto adminDto)
         {
-            Random random = new();
-            long accountNumber = (long)(random.NextDouble() * 9000000000L) + 1000000000L;
 
-            var newAdmin = _mapper.Map<Admin>(admin);
+            if (!ValidationHelper.IsValidEmail(adminDto.Email))
+            {
+                return BadRequest("Invalid email format.");
+            }
 
-            if (newAdmin.Pin.ToString().Length != 4)
+            if (!ValidationHelper.IsValidPassword(adminDto.Password))
+            {
+                return BadRequest("Password must be at least 7 characters long and contain at least one number and one special character.");
+            }
+            if (adminDto.Pin.ToString().Length != 4)
             {
                 return BadRequest("Invalid input. Enter valid 4 digit pin");
             }
 
-            var existingAccount = _registeredAccountsService.GetAccountByNumber(accountNumber);
-            if (existingAccount != null)
+            var newAdmin = _mapper.Map<Admin>(adminDto);
+            var existingUser = await _adminRepository.GetAdminByEmail(newAdmin.Email);
+
+            if (existingUser != null)
             {
-                return BadRequest("Account number already exists.");
+                return BadRequest("User email already exists.");
             }
 
-            newAdmin.AccountNumber = accountNumber;
+
+            Random random = new();
+            long AccountNumber = (long)(random.NextDouble() * 9000000000L) + 1000000000L;
+
             newAdmin.Balance = 0;
             newAdmin.OpeningDate = DateTime.Now;
+            newAdmin.AccountNumber = AccountNumber;
             newAdmin.Role = "Admin";
 
-            _registeredAccountsService.AddAdmin(newAdmin);
+            var createdAdmin = await _adminRepository.Register(newAdmin);
 
-            return Ok(new{ newAdmin });
+            return Ok(new { createdAdmin });
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("updateAdminDetails/{accountNumber}")]
-        public IActionResult UpdateAdmin(long accountNumber, [FromBody] Admin admin)
+        [HttpPost("updateAdminDetails/{id}")]
+        public async Task<IActionResult> UpdateAdmin(int id, [FromBody] AdminDto adminDto)
         {
-            var existingAdmin = _registeredAccountsService.GetAccountByNumber(accountNumber);
+            var existingAdmin = await _adminRepository.GetAdminById(id);
             if (existingAdmin == null || existingAdmin.Role != "Admin")
             {
                 return NotFound("Admin not found.");
             }
 
-            existingAdmin.FirstName = admin.FirstName;
-            existingAdmin.LastName = admin.LastName;
-            existingAdmin.Pin = admin.Pin;
-            existingAdmin.Balance = admin.Balance;
-            existingAdmin.OpeningDate = admin.OpeningDate;
-
-            _registeredAccountsService.UpdateAccount(existingAdmin);
+            await _adminRepository.UpdateAdminDetails(id, adminDto);
             return NoContent();
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("getAdminDetails/{accountNumber}")]
-        public IActionResult GetAdminByAccountNumber(long accountNumber)
+        [HttpGet("getAdminDetails/{id}")]
+        public async Task<IActionResult> GetAdminById(int id)
         {
-            var admin = _registeredAccountsService.GetAccountByNumber(accountNumber);
-            if (admin == null)
+            var admin = await _adminRepository.GetAdminById(id);
+            if (admin == null || admin.Role != "Admin")
             {
                 return NotFound("Admin not found.");
-            }
-            if (admin.Role != "Admin")
-            {
-                return NotFound($"{accountNumber} is not an Admin.");
             }
             return Ok(admin);
         }
-        [Authorize(Roles = "Admin")]
-        [HttpGet("getUserDetails/{accountNumber}")]
-        public IActionResult GetUserByAccountNumber(long accountNumber)
-        {
-            var user = _registeredAccountsService.GetAccountByNumber(accountNumber);
-            if (user == null)
-            {
-                return NotFound("Admin not found.");
-            }
-            if (user.Role != "User")
-            {
-                return NotFound($"{accountNumber} is not a User.");
-            }
-            return Ok(user);
-        }
-
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("allAdmins")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Admin>))]
-        public IActionResult GetAllAdmins()
+        [HttpGet("getAllAdmins")]
+        public async Task<IActionResult> GetAllAdmins()
         {
-            var accounts = _registeredAccountsService.GetAccounts();
-            var admins = accounts.Where(a => a.Role == "Admin").ToList();
-            return Ok(new{admins, totalAdmins = admins.Count});
-        }
-        [Authorize(Roles = "Admin")]
-        [HttpGet("allUsers")]
-        public IActionResult GetAllUsers()
-        {
-            var accounts = _registeredAccountsService.GetAccounts();
-            var users = accounts.Where(a => a.Role == "User").ToList();
-            return Ok(new{users,totalUsers = users.Count});
+            var admins = await _adminRepository.GetAllAdmins();
+            return Ok(new { admins, totalAdmins = admins.Count });
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("deleteAccount/{accountNumber}")]
-        public IActionResult DeleteAdmin(long accountNumber)
+        [HttpGet("getAllUsers")]
+        public async Task<IActionResult> GetAllUsers()
         {
-            var admin = _registeredAccountsService.GetAccountByNumber(accountNumber);
+            var users = await _adminRepository.GetAllUsers();
+            return Ok(new { users, totalUsers = users.Count });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("deleteAdmin/{id}")]
+        public async Task<IActionResult> DeleteAdmin(int id)
+        {
+            var admin = await _adminRepository.GetAdminById(id);
             if (admin == null || admin.Role != "Admin")
             {
                 return NotFound("Admin not found.");
             }
 
-            _registeredAccountsService.DeleteAccount(accountNumber);
+            await _adminRepository.DeleteAdminAccount(id);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("deleteUser/{email}")]
+        public async Task<IActionResult> DeleteUser(string email)
+        {
+            var user = await _adminRepository.GetUserByEmail(email);
+            if (user == null || user.Role != "User")
+            {
+                return NotFound("User not found.");
+            }
+
+            await _adminRepository.DeleteUserAccount(email);
             return NoContent();
         }
     }

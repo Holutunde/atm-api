@@ -1,16 +1,23 @@
 ﻿using ATMAPI.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Text;
+using ATMAPI.Data;
+using ATMAPI.Interfaces;
+using ATMAPI.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add JWT Authentication
 var configuration = builder.Configuration.GetSection("Jwt");
@@ -39,8 +46,10 @@ builder.Services.AddAuthentication(options =>
 });
 
 
-builder.Services.AddScoped<IRegisteredAccountsService, RegisteredAccountsService>();
-builder.Services.AddScoped<GetAccountNumberService>();
+builder.Services.AddScoped<IRegisteredUsersService, RegisteredUsersService>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<GetEmailService>();
 builder.Services.AddSingleton(new JwtTokenService(configuration["Key"], issuer, audience));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -79,6 +88,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
+    app.UseDeveloperExceptionPage();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");

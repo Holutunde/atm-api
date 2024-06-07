@@ -9,14 +9,12 @@ namespace ATMAPI.Helper
   {
     public AutoMapperProfile()
     {
-        CreateMap<Account, AccountUpdateDto>();
-        CreateMap<AccountUpdateDto,Account>();
-        CreateMap<Account, AccountDto>();
-        CreateMap<AccountDto, Account>();
-        CreateMap<Account, AccountDetailsDto>();
-        CreateMap<AccountDetailsDto, Account>();
-        CreateMap<Admin, AccountDto>();
-        CreateMap<AccountDto, Admin>();
+        CreateMap<User, UserUpdateDto>();
+        CreateMap<UserUpdateDto,User>();
+        CreateMap<User, UserDto>();
+        CreateMap<UserDto, User>();
+        CreateMap<Admin, AdminDto>();
+        CreateMap<AdminDto, Admin>();
         
     }
   }

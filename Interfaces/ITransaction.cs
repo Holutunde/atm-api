@@ -7,7 +7,7 @@ namespace ATMAPI.Interfaces
         void CheckBalance();
         void DepositMoney();
         void WithdrawMoney();
-        void UpdatePin(List<Account> accounts);
-        void TransferMoney(List<Account> accounts);
+        void UpdatePin(List<User> Users);
+        void TransferMoney(List<User> Users);
     }
 }

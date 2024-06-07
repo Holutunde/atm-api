@@ -5,14 +5,14 @@ using OfficeOpenXml;
 
 namespace ATMAPI.Services
 {
-    public class RegisteredAccountsService : IRegisteredAccountsService
+    public class RegisteredUsersService : IRegisteredUsersService
     {
-        static readonly string ExcelFilePath = @"/Users/apple/Documents/Programming Coding/C#/ATMAPI/ATMAPI/ATMAPI/Database/Accountdetails.xlsx";
+        static readonly string ExcelFilePath = @"/Users/apple/Documents/Programming Coding/C#/ATMAPI/ATMAPI/ATMAPI/Database/Userdetails.xlsx";
 
-        public void AddAccount(Account account)
+        public void AddUser(User User)
         {
 
-            Console.WriteLine(account.AccountNumber);
+            Console.WriteLine(User.AccountNumber);
             string directoryPath = Path.GetDirectoryName(ExcelFilePath);
             if (!Directory.Exists(directoryPath))
             {
@@ -23,30 +23,30 @@ namespace ATMAPI.Services
             try
             {
                 using ExcelPackage package = new(fileInfo);
-                ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault() ?? package.Workbook.Worksheets.Add("Accounts");
+                ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault() ?? package.Workbook.Worksheets.Add("Users");
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
-                // In the AddAccount method
-                worksheet.Cells[rowCount + 1, 1].Value = account.FirstName;
-                worksheet.Cells[rowCount + 1, 2].Value = account.LastName;
-                worksheet.Cells[rowCount + 1, 3].Value = Convert.ToInt64(account.AccountNumber);
-                worksheet.Cells[rowCount + 1, 4].Value = Convert.ToInt32(account.Pin);
-                worksheet.Cells[rowCount + 1, 5].Value = account.Balance;
-                worksheet.Cells[rowCount + 1, 6].Value = account.OpeningDate.ToString("M/d/yyyy h:mm:ss tt");
-                worksheet.Cells[rowCount + 1, 7].Value = account.Role; 
+                // In the AddUser method
+                worksheet.Cells[rowCount + 1, 1].Value = User.FirstName;
+                worksheet.Cells[rowCount + 1, 2].Value = User.LastName;
+                worksheet.Cells[rowCount + 1, 3].Value = Convert.ToInt64(User.AccountNumber);
+                worksheet.Cells[rowCount + 1, 4].Value = Convert.ToInt32(User.Pin);
+                worksheet.Cells[rowCount + 1, 5].Value = User.Balance;
+                worksheet.Cells[rowCount + 1, 6].Value = User.OpeningDate.ToString("M/d/yyyy h:mm:ss tt");
+                worksheet.Cells[rowCount + 1, 7].Value = User.Role; 
 
 
                 package.Save();
-                Console.WriteLine("Account added successfully.");
+                Console.WriteLine("User added successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving account: {ex.Message}");
+                Console.WriteLine($"Error saving User: {ex.Message}");
             }
         }
-        public void AddAdmin(Admin account)
+        public void AddAdmin(Admin User)
         {
 
-            Console.WriteLine(account.AccountNumber);
+            Console.WriteLine(User.AccountNumber);
             string directoryPath = Path.GetDirectoryName(ExcelFilePath);
             if (!Directory.Exists(directoryPath))
             {
@@ -57,28 +57,28 @@ namespace ATMAPI.Services
             try
             {
                 using ExcelPackage package = new(fileInfo);
-                ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault() ?? package.Workbook.Worksheets.Add("Accounts");
+                ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault() ?? package.Workbook.Worksheets.Add("Users");
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
-                // In the AddAccount method
-                worksheet.Cells[rowCount + 1, 1].Value = account.FirstName;
-                worksheet.Cells[rowCount + 1, 2].Value = account.LastName;
-                worksheet.Cells[rowCount + 1, 3].Value = Convert.ToInt64(account.AccountNumber);
-                worksheet.Cells[rowCount + 1, 4].Value = Convert.ToInt32(account.Pin);
-                worksheet.Cells[rowCount + 1, 5].Value = account.Balance;
-                worksheet.Cells[rowCount + 1, 6].Value = account.OpeningDate.ToString("M/d/yyyy h:mm:ss tt");
-                worksheet.Cells[rowCount + 1, 7].Value = account.Role; 
+                // In the AddUser method
+                worksheet.Cells[rowCount + 1, 1].Value = User.FirstName;
+                worksheet.Cells[rowCount + 1, 2].Value = User.LastName;
+                worksheet.Cells[rowCount + 1, 3].Value = Convert.ToInt64(User.AccountNumber);
+                worksheet.Cells[rowCount + 1, 4].Value = Convert.ToInt32(User.Pin);
+                worksheet.Cells[rowCount + 1, 5].Value = User.Balance;
+                worksheet.Cells[rowCount + 1, 6].Value = User.OpeningDate.ToString("M/d/yyyy h:mm:ss tt");
+                worksheet.Cells[rowCount + 1, 7].Value = User.Role; 
 
 
                 package.Save();
-                Console.WriteLine("Account added successfully.");
+                Console.WriteLine("User added successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving account: {ex.Message}");
+                Console.WriteLine($"Error saving User: {ex.Message}");
             }
         }
 
-        public void UpdateAccount(Account updatedAccount)
+        public void UpdateUser(User updatedUser)
         {
             FileInfo fileInfo = new(ExcelFilePath);
             if (!fileInfo.Exists)
@@ -93,55 +93,55 @@ namespace ATMAPI.Services
                 ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
                 if (worksheet == null)
                 {
-                    Console.WriteLine("Accounts worksheet not found.");
+                    Console.WriteLine("Users worksheet not found.");
                     return;
                 }
 
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
-                bool accountFound = false;
+                bool UserFound = false;
 
                 for (int i = 2; i <= rowCount; i++) 
                 {
-                    if (worksheet.Cells[i, 3].Value?.ToString() == updatedAccount.AccountNumber.ToString())
+                    if (worksheet.Cells[i, 3].Value?.ToString() == updatedUser.AccountNumber.ToString())
                     {
-                        worksheet.Cells[i, 1].Value = updatedAccount.FirstName;
-                        worksheet.Cells[i, 2].Value = updatedAccount.LastName;
-                        worksheet.Cells[i, 3].Value = updatedAccount.AccountNumber;
-                        worksheet.Cells[i, 4].Value = updatedAccount.Pin;
-                        worksheet.Cells[i, 5].Value = updatedAccount.Balance;
-                        worksheet.Cells[i, 6].Value = updatedAccount.OpeningDate;
-                        worksheet.Cells[i, 7].Value = updatedAccount.Role;
+                        worksheet.Cells[i, 1].Value = updatedUser.FirstName;
+                        worksheet.Cells[i, 2].Value = updatedUser.LastName;
+                        worksheet.Cells[i, 3].Value = updatedUser.AccountNumber;
+                        worksheet.Cells[i, 4].Value = updatedUser.Pin;
+                        worksheet.Cells[i, 5].Value = updatedUser.Balance;
+                        worksheet.Cells[i, 6].Value = updatedUser.OpeningDate;
+                        worksheet.Cells[i, 7].Value = updatedUser.Role;
 
-                        accountFound = true;
+                        UserFound = true;
                         break;
                     }
                 }
 
-                if (!accountFound)
+                if (!UserFound)
                 {
-                    Console.WriteLine("Account not found in the worksheet.");
+                    Console.WriteLine("User not found in the worksheet.");
                     return;
                 }
 
                 package.Save();
-                Console.WriteLine("Account updated successfully.");
+                Console.WriteLine("User updated successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating account: {ex.Message}");
+                Console.WriteLine($"Error updating User: {ex.Message}");
             }
         }
 
 
-        public ICollection<Account> GetAccounts()
+        public ICollection<User> GetUsers()
         {
-            ICollection<Account> accounts = new List<Account>();
+            ICollection<User> Users = new List<User>();
 
             FileInfo fileInfo = new(ExcelFilePath);
             if (!fileInfo.Exists)
             {
                 Console.WriteLine("Excel file does not exist.");
-                return accounts;
+                return Users;
             }
 
             try
@@ -161,7 +161,7 @@ namespace ATMAPI.Services
                             continue;
                         }
 
-                        Account account = new Account
+                        User User = new User
                         {
                             FirstName = worksheet.Cells[row, 1].Value?.ToString(),
                             LastName = worksheet.Cells[row, 2].Value?.ToString(),
@@ -171,7 +171,7 @@ namespace ATMAPI.Services
                             OpeningDate = openingDate,
                             Role = worksheet.Cells[row, 7].Value?.ToString() 
                         };
-                        accounts.Add(account);
+                        Users.Add(User);
                     }
                 }
                 else
@@ -184,16 +184,16 @@ namespace ATMAPI.Services
                 Console.WriteLine($"Error reading Excel file: {ex.Message}");
             }
 
-            return accounts;
+            return Users;
         }
 
-        public Account GetAccountByNumber(long accountNumber)
+        public User GetUserByNumber(long AccountNumber)
         {
-            var accounts = GetAccounts();
-            return accounts.FirstOrDefault(a => a.AccountNumber == accountNumber);
+            var Users = GetUsers();
+            return Users.FirstOrDefault(a => a.AccountNumber == AccountNumber);
         }
 
-        public void DeleteAccount(long accountNumber)
+        public void DeleteUser(long AccountNumber)
         {
             FileInfo fileInfo = new(ExcelFilePath);
             if (!fileInfo.Exists)
@@ -208,35 +208,35 @@ namespace ATMAPI.Services
                 ExcelWorksheet worksheet = package.Workbook.Worksheets.FirstOrDefault();
                 if (worksheet == null)
                 {
-                    Console.WriteLine("Accounts worksheet not found.");
+                    Console.WriteLine("Users worksheet not found.");
                     return;
                 }
 
                 int rowCount = worksheet.Dimension?.Rows ?? 0;
-                bool accountFound = false;
+                bool UserFound = false;
 
                 for (int i = 2; i <= rowCount; i++)
                 {
-                    if (worksheet.Cells[i, 3].Value?.ToString() == accountNumber.ToString())
+                    if (worksheet.Cells[i, 3].Value?.ToString() == AccountNumber.ToString())
                     {
                         worksheet.DeleteRow(i);
-                        accountFound = true;
+                        UserFound = true;
                         break;
                     }
                 }
 
-                if (!accountFound)
+                if (!UserFound)
                 {
-                    Console.WriteLine("Account not found in the worksheet.");
+                    Console.WriteLine("User not found in the worksheet.");
                     return;
                 }
 
                 package.Save();
-                Console.WriteLine("Account deleted successfully.");
+                Console.WriteLine("User deleted successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting account: {ex.Message}");
+                Console.WriteLine($"Error deleting User: {ex.Message}");
             }
         }
     }

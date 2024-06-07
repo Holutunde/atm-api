@@ -1,0 +1,28 @@
+﻿<Properties StartupConfiguration="{7941F64C-A94E-4BDE-A00E-904C5DEBC531}|https">
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.ATMAPI PreferredExecutionTarget="/Applications/Google Chrome.app" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="ATMAPI/Controllers/AdminController.cs">
+    <Files>
+      <File FileName="ATMAPI/Program.cs" Line="46" Column="92" />
+      <File FileName="ATMAPI/Controllers/AdminController.cs" Line="51" Column="1" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="ATMAPI" expanded="True">
+            <Node name="ATMAPI" expanded="True">
+              <Node name="Controllers" expanded="True">
+                <Node name="AdminController.cs" selected="True" />
+              </Node>
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

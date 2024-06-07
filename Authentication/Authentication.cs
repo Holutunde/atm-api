@@ -6,27 +6,27 @@ namespace ATMAPI.Authentication {
 }
 public class Authentication
 {
-    private List<Account> accounts;
-    private bool AuthenticateUserAccount = true;
+    private List<User> Users;
+    private bool AuthenticateUserUser = true;
     public long InputtedAccountNumber { get; set; }
 
-    public Authentication(List<Account> accounts)
+    public Authentication(List<User> Users)
     {
-        this.accounts = accounts;
+        this.Users = Users;
     }
 
 
-    private bool AuthenticateAccount(long inputAccountNumber, int inputPin)
+    private bool AuthenticateUser(long inputAccountNumber, int inputPin)
     {
-        var account = accounts.Find(acc => acc.AccountNumber == inputAccountNumber && acc.Pin == inputPin);
-        return account != null;
+        var User = Users.Find(acc => acc.AccountNumber == inputAccountNumber && acc.Pin == inputPin);
+        return User != null;
     }
 
-    public Account? StartAuthentication()
+    public User? StartAuthentication()
     {
-        while (AuthenticateUserAccount)
+        while (AuthenticateUserUser)
         {
-            Console.Write("Enter your 10 digit account number: ");
+            Console.Write("Enter your 10 digit User number: ");
             if (!long.TryParse(Console.ReadLine(), out long inputAccountNumber))
             {
                 Messages.EnterValidAccountNumber();
@@ -35,15 +35,15 @@ public class Authentication
 
             if (inputAccountNumber.ToString().Length != 10)
             {
-                Console.WriteLine("Account number must be 10 digits");
+                Console.WriteLine("User number must be 10 digits");
                 continue;
             }
 
 
-            var account = accounts.Find(acc => acc.AccountNumber == inputAccountNumber);
-            if (account == null)
+            var User = Users.Find(acc => acc.AccountNumber == inputAccountNumber);
+            if (User == null)
             {
-                 Messages.AccountNotFound();
+                 Messages.UserNotFound();
                 continue;
             }
 
@@ -58,17 +58,17 @@ public class Authentication
                     continue;
                 }
 
-                if (AuthenticateAccount(inputAccountNumber, inputPin))
+                if (AuthenticateUser(inputAccountNumber, inputPin))
                 {
                     Console.WriteLine("Correct pin entered.");
-                    return account;
+                    return User;
                 }
 
                 Console.WriteLine("Incorrect pin!!! Confirm and enter correct pin.");
             }
 
-            Console.WriteLine("Max attempts reached. Account suspended, visit the bank for further inquiries.");
-            AuthenticateUserAccount = false;
+            Console.WriteLine("Max attempts reached. User suspended, visit the bank for further inquiries.");
+            AuthenticateUserUser = false;
         }
 
         return null;
