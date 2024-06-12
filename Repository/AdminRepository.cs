@@ -1,9 +1,8 @@
-using ATMAPI.Interfaces;
 using ATMAPI.Data;
-using Microsoft.EntityFrameworkCore;
 using ATMAPI.Dto;
+using ATMAPI.Interfaces;
 using ATMAPI.Models;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace ATMAPI.Repository
 {
@@ -63,7 +62,7 @@ namespace ATMAPI.Repository
             }
         }
 
-        public async Task UpdateAdminBalance(int id, long newBalance)
+        public async Task UpdateAdminBalance(int id, double newBalance)
         {
             var admin = await _context.Admins.FindAsync(id);
             if (admin != null)
@@ -74,10 +73,11 @@ namespace ATMAPI.Repository
             }
         }
 
-
         public async Task<Admin> GetAdminByAccountNumber(long accountNumber)
         {
-            return await _context.Admins.SingleOrDefaultAsync(u => u.AccountNumber == accountNumber);
+            return await _context.Admins.SingleOrDefaultAsync(u =>
+                u.AccountNumber == accountNumber
+            );
         }
 
         public async Task<User> GetUserById(int id)
@@ -113,11 +113,6 @@ namespace ATMAPI.Repository
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
             }
-        }
-
-        public Task UpdateAdminBalance(int id, double newBalance)
-        {
-            throw new NotImplementedException();
         }
     }
 }

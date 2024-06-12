@@ -1,7 +1,7 @@
-using ATMAPI.Dto;
-using ATMAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ATMAPI.Dto;
+using ATMAPI.Models;
 
 namespace ATMAPI.Interfaces
 {
@@ -21,7 +21,5 @@ namespace ATMAPI.Interfaces
         Task<Admin> GetAdminByAccountNumber(long accountNumber);
         Task DeleteAdminAccount(int id);
         Task DeleteUserAccount(string email);
-
-        
     }
 }

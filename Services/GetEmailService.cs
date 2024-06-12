@@ -14,5 +14,17 @@ namespace ATMAPI.Services
 
             return emailClaim;
         }
+
+        public long GetAccountNumberFromToken(ClaimsPrincipal user)
+        {
+            var accountNumberClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (accountNumberClaim == null)
+            {
+                throw new UnauthorizedAccessException("Account number not found in token.");
+            }
+
+            return long.Parse(accountNumberClaim);
+        }
     }
+    
 }

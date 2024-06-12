@@ -69,22 +69,23 @@ namespace ATMAPI.Controllers
         {
             var email = GetCurrentEmail();
 
-            var user =
-                await GetCurrentUserByEmail(email) ?? (IUser)await GetCurrentAdminByEmail(email);
-            if (user == null)
+            var user = await GetCurrentUserByEmail(email);
+            var admin = user == null ? await GetCurrentAdminByEmail(email) : null;
+            if (user == null && admin == null)
                 return Unauthorized();
 
-            user.Balance += depositDto.Amount;
-            if (user is User userObj)
+            if (user != null)
             {
-                await _userRepository.UpdateUserBalance(userObj.Id, user.Balance);
+                user.Balance += depositDto.Amount;
+                await _userRepository.UpdateUserBalance(user.Id, user.Balance);
             }
-            else if (user is Admin adminObj)
+            else if (admin != null)
             {
-                await _adminRepository.UpdateAdminBalance(adminObj.Id, user.Balance);
+                admin.Balance += depositDto.Amount;
+                await _adminRepository.UpdateAdminBalance(admin.Id, admin.Balance);
             }
 
-            return Ok(new { balance = user.Balance });
+            return Ok(new { balance = user?.Balance ?? admin.Balance });
         }
 
         [Authorize]
@@ -93,49 +94,60 @@ namespace ATMAPI.Controllers
         {
             var email = GetCurrentEmail();
 
-            var sender =
-                await GetCurrentUserByEmail(email) ?? (IUser)await GetCurrentAdminByEmail(email);
-            if (sender == null)
+            var sender = await GetCurrentUserByEmail(email);
+            var adminSender = sender == null ? await GetCurrentAdminByEmail(email) : null;
+            if (sender == null && adminSender == null)
                 return Unauthorized();
 
-            if (sender.Balance < transferDto.Amount)
+            var senderBalance = sender?.Balance ?? adminSender.Balance;
+            if (senderBalance < transferDto.Amount)
             {
                 return BadRequest("Insufficient balance.");
             }
 
-            var receiver =
-                await _userRepository.GetUserByAccountNumber(transferDto.ReceiverAccountNumber)
-                ?? (IUser)
-                    await _adminRepository.GetAdminByAccountNumber(
+            var receiverUser = await _userRepository.GetUserByAccountNumber(
+                transferDto.ReceiverAccountNumber
+            );
+            var receiverAdmin =
+                receiverUser == null
+                    ? await _adminRepository.GetAdminByAccountNumber(
                         transferDto.ReceiverAccountNumber
-                    );
-            if (receiver == null)
+                    )
+                    : null;
+            if (receiverUser == null && receiverAdmin == null)
             {
                 return NotFound("Receiver account not found.");
             }
 
-            sender.Balance -= transferDto.Amount;
-            receiver.Balance += transferDto.Amount;
-
-            if (sender is User senderUser)
+            if (sender != null)
             {
-                await _userRepository.UpdateUserBalance(senderUser.Id, senderUser.Balance);
+                sender.Balance -= transferDto.Amount;
+                await _userRepository.UpdateUserBalance(sender.Id, sender.Balance);
             }
-            else if (sender is Admin senderAdmin)
+            else if (adminSender != null)
             {
-                await _adminRepository.UpdateAdminBalance(senderAdmin.Id, senderAdmin.Balance);
+                adminSender.Balance -= transferDto.Amount;
+                await _adminRepository.UpdateAdminBalance(adminSender.Id, adminSender.Balance);
             }
 
-            if (receiver is User receiverUser)
+            if (receiverUser != null)
             {
+                receiverUser.Balance += transferDto.Amount;
                 await _userRepository.UpdateUserBalance(receiverUser.Id, receiverUser.Balance);
             }
-            else if (receiver is Admin receiverAdmin)
+            else if (receiverAdmin != null)
             {
+                receiverAdmin.Balance += transferDto.Amount;
                 await _adminRepository.UpdateAdminBalance(receiverAdmin.Id, receiverAdmin.Balance);
             }
 
-            return Ok(new { senderBalance = sender.Balance, receiverBalance = receiver.Balance });
+            return Ok(
+                new
+                {
+                    senderBalance = sender?.Balance ?? adminSender.Balance,
+                    receiverBalance = receiverUser?.Balance ?? receiverAdmin.Balance
+                }
+            );
         }
 
         [Authorize]
@@ -144,21 +156,22 @@ namespace ATMAPI.Controllers
         {
             var email = GetCurrentEmail();
 
-            var user =
-                await GetCurrentUserByEmail(email) ?? (IUser)await GetCurrentAdminByEmail(email);
-            if (user == null)
+            var user = await GetCurrentUserByEmail(email);
+            var admin = user == null ? await GetCurrentAdminByEmail(email) : null;
+            if (user == null && admin == null)
                 return Unauthorized();
 
-            user.Pin = changePinDto.NewPin;
-            if (user is User userObj)
+            if (user != null)
             {
-                await _userRepository.UpdateUserDetails(userObj.Id, new UserDto { Pin = user.Pin });
+                user.Pin = changePinDto.NewPin;
+                await _userRepository.UpdateUserDetails(user.Id, new UserDto { Pin = user.Pin });
             }
-            else if (user is Admin adminObj)
+            else if (admin != null)
             {
+                admin.Pin = changePinDto.NewPin;
                 await _adminRepository.UpdateAdminDetails(
-                    adminObj.Id,
-                    new AdminDto { Pin = user.Pin }
+                    admin.Id,
+                    new AdminDto { Pin = admin.Pin }
                 );
             }
 
