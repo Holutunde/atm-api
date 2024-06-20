@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "rKXc0LWWmHN+98dQwgQr/VGkqvpfq/SfGWRYeoLbVYhO1jF6bUnjZdhLXb1vWGijiW95P8DVTehZ7ejWIIEgnw==",
+  "success": true,
+  "projectFilePath": "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Application/Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/apple/.nuget/packages/microsoft.identitymodel.abstractions/7.6.1/microsoft.identitymodel.abstractions.7.6.1.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.identitymodel.jsonwebtokens/7.6.1/microsoft.identitymodel.jsonwebtokens.7.6.1.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.identitymodel.logging/7.6.1/microsoft.identitymodel.logging.7.6.1.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.identitymodel.tokens/7.6.1/microsoft.identitymodel.tokens.7.6.1.nupkg.sha512",
+    "/Users/apple/.nuget/packages/system.identitymodel.tokens.jwt/7.6.1/system.identitymodel.tokens.jwt.7.6.1.nupkg.sha512"
+  ],
+  "logs": []
+}

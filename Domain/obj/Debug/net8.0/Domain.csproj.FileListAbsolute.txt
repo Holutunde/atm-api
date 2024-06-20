@@ -1,0 +1,12 @@
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/bin/Debug/net8.0/Domain.deps.json
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/bin/Debug/net8.0/Domain.dll
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/bin/Debug/net8.0/Domain.pdb
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/Domain.AssemblyInfoInputs.cache
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/Domain.AssemblyInfo.cs
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/Domain.csproj.CoreCompileInputs.cache
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/Domain.sourcelink.json
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/Domain.dll
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/refint/Domain.dll
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/Domain.pdb
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/obj/Debug/net8.0/ref/Domain.dll
