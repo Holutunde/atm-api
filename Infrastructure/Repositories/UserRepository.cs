@@ -7,9 +7,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
-    public class UserRepository(DataContext context) : IUserRepository
+    public class UserRepository: IUserRepository
     {
-        private readonly DataContext _context = context;
+        private readonly DataContext _context;
+
+        public UserRepository(DataContext context)
+        {
+            _context = context;
+        }
 
         public async Task<User> Register(User user)
         {

@@ -1,9 +1,10 @@
-using System.Threading.Tasks;
 using Application.Dto;
 using Api.Helpers;
 using Application.Interfaces;
+using Application.Validator;
 using Domain.Entities;
 using Infrastructure.Services;
+using FluentValidation.Results;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,37 +13,41 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/user")]
-    public class UserController(
-        IUserRepository userRepository,
-        IMapper mapper,
-        JwtTokenService jwtTokenService
-    ) : ControllerBase
+    public class UserController : ControllerBase
     {
-        private readonly IUserRepository _userRepository = userRepository;
-        private readonly IMapper _mapper = mapper;
-        private readonly JwtTokenService _jwtTokenService = jwtTokenService;
+        private readonly IUserRepository _userRepository;
+        private readonly IMapper _mapper;
+        private readonly JwtTokenService _jwtTokenService;
+
+        public UserController(IUserRepository userRepository,
+        IMapper mapper,
+        JwtTokenService jwtTokenService)
+        {
+            _userRepository= userRepository;
+            _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
+
+        }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserDto userDto)
         {
-            if (userDto.Pin.ToString().Length != 4)
+            UserValidator validator = new UserValidator();
+
+
+            ValidationResult result = validator.Validate(userDto);
+
+            if (!result.IsValid)
             {
-                return BadRequest("Invalid input. Enter a valid 4-digit PIN.");
+                List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
+                string errorMessage = string.Join(", ", errors);
+
+                return BadRequest(errorMessage);
             }
 
-            if (!ValidationHelper.IsValidEmail(userDto.Email))
-            {
-                return BadRequest("Invalid email format.");
-            }
-
-            if (!ValidationHelper.IsValidPassword(userDto.Password))
-            {
-                return BadRequest(
-                    "Password must be at least 7 characters long and contain at least one number and one special character."
-                );
-            }
 
             var newUser = _mapper.Map<User>(userDto);
+
             var existingUser = await _userRepository.GetUserByEmail(newUser.Email);
 
             if (existingUser != null)
@@ -51,18 +56,24 @@ namespace Api.Controllers
             }
 
             Random random = new Random();
-            long AccountNumber = (long)(random.NextDouble() * 9000000000L) + 1000000000L;
+            long accountNumber = GenerateRandomAccountNumber();
+
             newUser.Balance = 0;
             newUser.OpeningDate = DateTime.Now;
-            newUser.AccountNumber = AccountNumber;
+            newUser.AccountNumber = accountNumber;
             newUser.Role = "User";
-            newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
 
+            newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
             var createdUser = await _userRepository.Register(newUser);
 
             return Created("", new { createdUser });
         }
 
+        private long GenerateRandomAccountNumber()
+        {
+            Random random = new Random();
+            return (long)(random.NextDouble() * 9000000000L) + 1000000000L;
+        }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] OnlineLoginDto loginDto)
         {
@@ -76,7 +87,7 @@ namespace Api.Controllers
             return Ok(new { token });
         }
 
-        [Authorize(Roles = "Admin,User")]
+        // [Authorize(Roles = "Admin,User")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {

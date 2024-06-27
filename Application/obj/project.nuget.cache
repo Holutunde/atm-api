@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "rKXc0LWWmHN+98dQwgQr/VGkqvpfq/SfGWRYeoLbVYhO1jF6bUnjZdhLXb1vWGijiW95P8DVTehZ7ejWIIEgnw==",
+  "dgSpecHash": "BXdDd1AeCzA+miJZOrU4LI+Lr6JBxFpOnCvVxIN+mnrzSYgqSTSHD1yoL1H700Z+w2iCsKjd3l9/deSuH7U0Gw==",
   "success": true,
   "projectFilePath": "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Application/Application.csproj",
   "expectedPackageFiles": [
+    "/Users/apple/.nuget/packages/fluentvalidation/11.9.2/fluentvalidation.11.9.2.nupkg.sha512",
     "/Users/apple/.nuget/packages/microsoft.identitymodel.abstractions/7.6.1/microsoft.identitymodel.abstractions.7.6.1.nupkg.sha512",
     "/Users/apple/.nuget/packages/microsoft.identitymodel.jsonwebtokens/7.6.1/microsoft.identitymodel.jsonwebtokens.7.6.1.nupkg.sha512",
     "/Users/apple/.nuget/packages/microsoft.identitymodel.logging/7.6.1/microsoft.identitymodel.logging.7.6.1.nupkg.sha512",

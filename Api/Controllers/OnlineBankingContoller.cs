@@ -13,16 +13,21 @@ namespace Api.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IAdminRepository _adminRepository;
-        private readonly GetEmailService _getEmailService;
+
+        private readonly ITransactionRepository _transactionRepository;
+        
+            private readonly GetEmailService _getEmailService;
 
         public OnlineTransactionController(
             IUserRepository userRepository,
             IAdminRepository adminRepository,
+            ITransactionRepository transactionRepository,
             GetEmailService getEmailService
         )
         {
             _userRepository = userRepository;
             _adminRepository = adminRepository;
+            _transactionRepository = transactionRepository;
             _getEmailService = getEmailService;
         }
 
@@ -98,7 +103,15 @@ namespace Api.Controllers
             if (sender == null && adminSender == null)
                 return Unauthorized();
 
+            var senderAccountNumber = sender?.AccountNumber ?? adminSender.AccountNumber;
             var senderBalance = sender?.Balance ?? adminSender.Balance;
+
+            // Check if sender account number is the same as receiver account number
+            if (senderAccountNumber == transferDto.ReceiverAccountNumber)
+            {
+                return BadRequest("Sender and receiver account numbers cannot be the same.");
+            }
+
             if (senderBalance < transferDto.Amount)
             {
                 return BadRequest("Insufficient balance.");
@@ -140,6 +153,17 @@ namespace Api.Controllers
                 await _adminRepository.UpdateAdminBalance(receiverAdmin.Id, receiverAdmin.Balance);
             }
 
+            Transaction transaction = new()
+            {
+                SenderAccountNumber = senderAccountNumber,
+                ReceiverAccountNumber = transferDto.ReceiverAccountNumber,
+                Amount = transferDto.Amount,
+                TransactionDate = DateTime.UtcNow,
+                TransactionType = "Transfer"
+            };
+
+            await _transactionRepository.AddTransaction(transaction);
+
             return Ok(
                 new
                 {
@@ -148,6 +172,8 @@ namespace Api.Controllers
                 }
             );
         }
+
+
 
         [Authorize]
         [HttpPost("changePin")]

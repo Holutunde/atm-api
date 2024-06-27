@@ -1,8 +1,10 @@
 using Application.Dto;
 using Api.Helpers;
 using Application.Interfaces;
+using Application.Validator;
 using Domain.Entities;
 using Infrastructure.Services;
+using FluentValidation.Results;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,19 +31,17 @@ namespace Api.Controllers
         public async Task<IActionResult> CreateAdmin([FromBody] AdminDto adminDto)
         {
 
-            if (!ValidationHelper.IsValidEmail(adminDto.Email))
+            AdminValidator validator = new();
+            ValidationResult result = validator.Validate(adminDto);
+
+            if (!result.IsValid)
             {
-                return BadRequest("Invalid email format.");
+                List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
+                string errorMessage = string.Join("\n", errors);
+
+                return BadRequest(errorMessage);
             }
 
-            if (!ValidationHelper.IsValidPassword(adminDto.Password))
-            {
-                return BadRequest("Password must be at least 7 characters long and contain at least one number and one special character.");
-            }
-            if (adminDto.Pin.ToString().Length != 4)
-            {
-                return BadRequest("Invalid input. Enter valid 4 digit pin");
-            }
 
             var newAdmin = _mapper.Map<Admin>(adminDto);
             var existingUser = await _adminRepository.GetAdminByEmail(newAdmin.Email);
@@ -59,6 +59,10 @@ namespace Api.Controllers
             newAdmin.OpeningDate = DateTime.Now;
             newAdmin.AccountNumber = AccountNumber;
             newAdmin.Role = "Admin";
+
+
+
+            // Hash the password after validation
             newAdmin.Password = BCrypt.Net.BCrypt.HashPassword(newAdmin.Password);
 
             var createdAdmin = await _adminRepository.Register(newAdmin);
@@ -93,7 +97,7 @@ namespace Api.Controllers
             return NoContent();
         }
 
-        [Authorize(Roles = "Admin")]
+        // [Authorize(Roles = "Admin")]
         [HttpGet("getAdminDetails/{id}")]
         public async Task<IActionResult> GetAdminById(int id)
         {

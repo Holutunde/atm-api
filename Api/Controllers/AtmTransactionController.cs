@@ -1,6 +1,8 @@
 using Application.Dto;
 using Application.Interfaces;
+using Application.Validator;
 using Domain.Entities;
+using FluentValidation.Results;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,19 +13,36 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/atm")]
-    public class AtmTransactionController(IUserRepository userRepository, IAdminRepository adminRepository, JwtTokenService jwtTokenService) : ControllerBase
+    public class AtmTransactionController : ControllerBase
     {
-        private readonly IUserRepository _userRepository = userRepository;
-        private readonly IAdminRepository _adminRepository = adminRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IAdminRepository _adminRepository;
 
-        private readonly JwtTokenService _jwtTokenService = jwtTokenService;
+        private readonly JwtTokenService _jwtTokenService;
 
 
-
+     public AtmTransactionController(IUserRepository userRepository, IAdminRepository adminRepository, JwtTokenService jwtTokenService){
+            _adminRepository = adminRepository;
+            _userRepository = userRepository;
+            _jwtTokenService = jwtTokenService;
+        }
 
         [HttpPost("access")]
         public async Task<IActionResult> Access([FromBody] AtmLoginDto accessDto)
         {
+
+
+            AccessValidator validator = new();
+            ValidationResult result = validator.Validate(accessDto);
+
+            if (!result.IsValid)
+            {
+                List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
+                string errorMessage = string.Join("\n", errors);
+
+                return BadRequest(errorMessage);
+            }
+
             var user = await _userRepository.GetUserByAccountNumber(accessDto.AccountNumber);
 
             if (user == null)
@@ -109,7 +128,16 @@ namespace Api.Controllers
             if (sender == null && adminSender == null)
                 return Unauthorized();
 
+
+            var senderAccountNumber = sender?.AccountNumber ?? adminSender.AccountNumber;
             var senderBalance = sender?.Balance ?? adminSender.Balance;
+
+            // Check if sender account number is the same as receiver account number
+            if (senderAccountNumber == transferDto.ReceiverAccountNumber)
+            {
+                return BadRequest("Sender and receiver account numbers cannot be the same.");
+            }
+
             if (senderBalance < transferDto.Amount)
             {
                 return BadRequest("Insufficient balance.");

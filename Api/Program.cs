@@ -1,4 +1,5 @@
 ﻿using Infrastructure.Services;
+using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -13,11 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
-builder.Services.AddDbContext<DataContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var configuration = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(configuration["Key"]);
@@ -44,10 +43,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-
-builder.Services.AddScoped<IAdminRepository, AdminRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<GetEmailService>();
 builder.Services.AddSingleton(new JwtTokenService(configuration["Key"], issuer, audience));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>

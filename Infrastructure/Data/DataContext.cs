@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using Domain.Entities;
 
@@ -10,6 +9,7 @@ namespace Infrastructure.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Admin> Admins { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -153,3 +153,4 @@
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net8.0/Api.pdb
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net8.0/Api.genruntimeconfig.cache
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net8.0/ref/Api.dll
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/bin/Debug/net8.0/FluentValidation.dll
