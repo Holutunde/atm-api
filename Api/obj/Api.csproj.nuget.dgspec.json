@@ -57,6 +57,14 @@
               "target": "Package",
               "version": "[13.0.1, )"
             },
+            "MediatR": {
+              "target": "Package",
+              "version": "[11.0.0, )"
+            },
+            "MediatR.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[11.0.0, )"
+            },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[7.0.6, )"
@@ -143,6 +151,9 @@
             "projectReferences": {
               "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/Domain.csproj": {
                 "projectPath": "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/Domain.csproj"
+              },
+              "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Infrastructure/Infrastructure.csproj": {
+                "projectPath": "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Infrastructure/Infrastructure.csproj"
               }
             }
           }
@@ -165,6 +176,14 @@
             "FluentValidation": {
               "target": "Package",
               "version": "[11.9.2, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[11.0.0, )"
+            },
+            "MediatR.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[11.0.0, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
@@ -271,9 +290,6 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Application/Application.csproj": {
-                "projectPath": "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Application/Application.csproj"
-              },
               "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/Domain.csproj": {
                 "projectPath": "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Domain/Domain.csproj"
               }
@@ -302,6 +318,14 @@
             "BCrypt.Net-Next": {
               "target": "Package",
               "version": "[4.0.3, )"
+            },
+            "MediatR": {
+              "target": "Package",
+              "version": "[11.0.0, )"
+            },
+            "MediatR.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[11.0.0, )"
             },
             "Microsoft.AspNetCore.Authentication": {
               "target": "Package",

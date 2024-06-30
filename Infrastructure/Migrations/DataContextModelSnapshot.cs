@@ -77,7 +77,7 @@ namespace Infrastructure.Migrations
                     b.Property<long>("ReceiverAccountNumber")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("SenderAccountNumber")
+                    b.Property<long?>("SenderAccountNumber")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("TransactionDate")

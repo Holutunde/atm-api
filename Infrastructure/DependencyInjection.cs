@@ -1,6 +1,5 @@
-using Application.Interfaces;
 using Infrastructure.Data;
-using Infrastructure.Repositories;
+// using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,9 +15,9 @@ namespace Infrastructure
             services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddScoped<IAdminRepository, AdminRepository>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<ITransactionRepository, TransactionRepository>();
+            // services.AddScoped<IAdminRepository, AdminRepository>();
+            // services.AddScoped<IUserRepository, UserRepository>();
+            // services.AddScoped<ITransactionRepository, TransactionRepository>();
             services.AddScoped<GetEmailService>();
 
             return services;

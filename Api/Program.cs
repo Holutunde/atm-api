@@ -4,11 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System;
 using System.Text;
-using Infrastructure.Data;
-using Application.Interfaces;
-using Infrastructure.Repositories;
+using Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +13,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// Register MediatR with Application services
+builder.Services.AddApplicationServices();
 
 var configuration = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(configuration["Key"]);
@@ -27,7 +25,6 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    
 })
 .AddJwtBearer(options =>
 {

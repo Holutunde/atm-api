@@ -1,12 +1,17 @@
+using Application.Admins.Commands;
+using Application.Admins.Queries;
 using Application.Dto;
 using Application.Interfaces;
+using Application.Users.Commands;
+using Application.Users.Queries;
 using Application.Validator;
 using Domain.Entities;
 using FluentValidation.Results;
 using Infrastructure.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+
 
 
 namespace Api.Controllers
@@ -15,23 +20,20 @@ namespace Api.Controllers
     [Route("api/atm")]
     public class AtmTransactionController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IAdminRepository _adminRepository;
 
+        private readonly IMediator _mediator;
         private readonly JwtTokenService _jwtTokenService;
 
 
-     public AtmTransactionController(IUserRepository userRepository, IAdminRepository adminRepository, JwtTokenService jwtTokenService){
-            _adminRepository = adminRepository;
-            _userRepository = userRepository;
+     public AtmTransactionController(IMediator mediator, JwtTokenService jwtTokenService)
+        {
+            _mediator = mediator;
             _jwtTokenService = jwtTokenService;
         }
 
         [HttpPost("access")]
         public async Task<IActionResult> Access([FromBody] AtmLoginDto accessDto)
         {
-
-
             AccessValidator validator = new();
             ValidationResult result = validator.Validate(accessDto);
 
@@ -43,20 +45,18 @@ namespace Api.Controllers
                 return BadRequest(errorMessage);
             }
 
-            var user = await _userRepository.GetUserByAccountNumber(accessDto.AccountNumber);
+            var userQuery = new GetUserByAccountNumberQuery { AccountNumber =  accessDto.AccountNumber };
+            var user = await _mediator.Send(userQuery);
 
-            if (user == null)
-            {
-                return Unauthorized("Invalid credentials.");
-            }
-
-            if (user.Pin == accessDto.Pin)
+            if (user != null && user.Pin == accessDto.Pin)
             {
                 var token = _jwtTokenService.GenerateATmToken(user.AccountNumber);
                 return Ok(new { token });
             }
 
-            var admin = await _adminRepository.GetAdminByAccountNumber(accessDto.AccountNumber);
+            var adminQuery = new GetAdminByAccountNumberQuery{ AccountNumber = accessDto.AccountNumber};
+            var admin = await _mediator.Send(adminQuery);
+
             if (admin != null && admin.Pin == accessDto.Pin)
             {
                 var token = _jwtTokenService.GenerateATmToken(admin.AccountNumber);
@@ -65,6 +65,7 @@ namespace Api.Controllers
 
             return Unauthorized("Invalid account number or PIN.");
         }
+
 
         [Authorize]
         [HttpGet("checkBalance")]
@@ -75,13 +76,15 @@ namespace Api.Controllers
 
              var accountNumber = getEmailService.GetAccountNumberFromToken(User); ;
 
-            var user = await _userRepository.GetUserByAccountNumber(accountNumber);
+            var userQuery = new GetUserByAccountNumberQuery { AccountNumber = accountNumber };
+            var user = await _mediator.Send(userQuery);
             if (user != null)
             {
                 return Ok(new { balance = user.Balance });
             }
 
-            var admin = await _adminRepository.GetAdminByAccountNumber(accountNumber);
+            var adminQuery = new GetAdminByAccountNumberQuery { AccountNumber = accountNumber };
+            var admin = await _mediator.Send(adminQuery);
             if (admin != null)
             {
                 return Ok(new { balance = admin.Balance });
@@ -95,24 +98,31 @@ namespace Api.Controllers
         {
             GetEmailService getEmailService = new();
 
-            var accountNumber = getEmailService.GetAccountNumberFromToken(User); ;
+            var accountNumber = getEmailService.GetAccountNumberFromToken(User);
 
-            var user = await _userRepository.GetUserByAccountNumber(accountNumber);
-            var admin = user == null ? await _adminRepository.GetAdminByAccountNumber(accountNumber) : null;
-            if (user == null && admin == null) return Unauthorized();
+            var userQuery = new GetUserByAccountNumberQuery { AccountNumber = accountNumber };
+            var user = await _mediator.Send(userQuery);
 
-            if (user != null)
+            if (user == null)
             {
-                user.Balance += depositDto.Amount;
-                await _userRepository.UpdateUserBalance(user.Id, user.Balance);
-            }
-            else if (admin != null)
-            {
+                var adminQuery = new GetAdminByAccountNumberQuery { AccountNumber = accountNumber };
+                var admin = await _mediator.Send(adminQuery);
+
+                if (admin == null)
+                {
+                    return Unauthorized();
+                }
+
                 admin.Balance += depositDto.Amount;
-                await _adminRepository.UpdateAdminBalance(admin.Id, admin.Balance);
+                await _mediator.Send(new UpdateAdminBalanceCommand { Id = admin.Id, NewBalance = admin.Balance });
+
+                return Ok(new { balance = admin.Balance });
             }
 
-            return Ok(new { balance = user?.Balance ?? admin.Balance });
+            user.Balance += depositDto.Amount;
+            await _mediator.Send(new UpdateUserBalanceCommand { Id = user.Id, NewBalance = user.Balance });
+
+            return Ok(new { balance = user.Balance });
         }
 
         [Authorize]
@@ -123,17 +133,15 @@ namespace Api.Controllers
 
             var accountNumber = getEmailService.GetAccountNumberFromToken(User); ;
 
-            var sender = await _userRepository.GetUserByAccountNumber(accountNumber);
-            var adminSender = sender == null ? await _adminRepository.GetAdminByAccountNumber(accountNumber) : null;
+            var sender = await _mediator.Send(new GetUserByAccountNumberQuery { AccountNumber = accountNumber });
+            var adminSender = sender == null ? await _mediator.Send(new GetAdminByAccountNumberQuery { AccountNumber = accountNumber }) : null;
             if (sender == null && adminSender == null)
                 return Unauthorized();
 
-
-            var senderAccountNumber = sender?.AccountNumber ?? adminSender.AccountNumber;
             var senderBalance = sender?.Balance ?? adminSender.Balance;
 
             // Check if sender account number is the same as receiver account number
-            if (senderAccountNumber == transferDto.ReceiverAccountNumber)
+            if (accountNumber == transferDto.ReceiverAccountNumber)
             {
                 return BadRequest("Sender and receiver account numbers cannot be the same.");
             }
@@ -143,8 +151,8 @@ namespace Api.Controllers
                 return BadRequest("Insufficient balance.");
             }
 
-            var receiverUser = await _userRepository.GetUserByAccountNumber(transferDto.ReceiverAccountNumber);
-            var receiverAdmin = receiverUser == null ? await _adminRepository.GetAdminByAccountNumber(transferDto.ReceiverAccountNumber) : null;
+            var receiverUser = await _mediator.Send(new GetUserByAccountNumberQuery { AccountNumber = transferDto.ReceiverAccountNumber });
+            var receiverAdmin = receiverUser == null ? await _mediator.Send(new GetAdminByAccountNumberQuery { AccountNumber = transferDto.ReceiverAccountNumber }) : null;
             if (receiverUser == null && receiverAdmin == null)
             {
                 return NotFound("Receiver account not found.");
@@ -152,53 +160,50 @@ namespace Api.Controllers
 
             if (sender != null)
             {
-                sender.Balance -= transferDto.Amount;
-                await _userRepository.UpdateUserBalance(sender.Id, sender.Balance);
+                await _mediator.Send(new UpdateUserBalanceCommand { Id = sender.Id, NewBalance = sender.Balance - transferDto.Amount });
             }
             else if (adminSender != null)
             {
-                adminSender.Balance -= transferDto.Amount;
-                await _adminRepository.UpdateAdminBalance(adminSender.Id, adminSender.Balance);
+                await _mediator.Send(new UpdateAdminBalanceCommand { Id = adminSender.Id, NewBalance = adminSender.Balance - transferDto.Amount });
             }
 
             if (receiverUser != null)
             {
-                receiverUser.Balance += transferDto.Amount;
-                await _userRepository.UpdateUserBalance(receiverUser.Id, receiverUser.Balance);
+                await _mediator.Send(new UpdateUserBalanceCommand { Id = receiverUser.Id, NewBalance = receiverUser.Balance + transferDto.Amount });
             }
             else if (receiverAdmin != null)
             {
-                receiverAdmin.Balance += transferDto.Amount;
-                await _adminRepository.UpdateAdminBalance(receiverAdmin.Id, receiverAdmin.Balance);
+                await _mediator.Send(new UpdateAdminBalanceCommand { Id = receiverAdmin.Id, NewBalance = receiverAdmin.Balance + transferDto.Amount });
             }
 
             return Ok(new { senderBalance = sender?.Balance ?? adminSender.Balance, receiverBalance = receiverUser?.Balance ?? receiverAdmin.Balance });
         }
 
-        [Authorize]
-        [HttpPost("changePin")]
-        public async Task<IActionResult> ChangePin([FromBody] ChangePinDto changePinDto)
-        {
-            GetEmailService getEmailService = new();
 
-            var accountNumber = getEmailService.GetAccountNumberFromToken(User); ;
+        // [Authorize]
+        // [HttpPost("changePin")]
+        // public async Task<IActionResult> ChangePin([FromBody] ChangePinDto changePinDto)
+        // {
+        //     GetEmailService getEmailService = new();
 
-            var user = await _userRepository.GetUserByAccountNumber(accountNumber);
-            var admin = user == null ? await _adminRepository.GetAdminByAccountNumber(accountNumber) : null;
-            if (user == null && admin == null) return Unauthorized();
+        //     var accountNumber = getEmailService.GetAccountNumberFromToken(User); ;
 
-            if (user != null)
-            {
-                user.Pin = changePinDto.NewPin;
-                await _userRepository.UpdateUserDetails(user.Id, new UserDto { Pin = user.Pin });
-            }
-            else if (admin != null)
-            {
-                admin.Pin = changePinDto.NewPin;
-                await _adminRepository.UpdateAdminDetails(admin.Id, new AdminDto { Pin = admin.Pin });
-            }
+        //     var user = await _userRepository.GetUserByAccountNumber(accountNumber);
+        //     var admin = user == null ? await _adminRepository.GetAdminByAccountNumber(accountNumber) : null;
+        //     if (user == null && admin == null) return Unauthorized();
 
-            return NoContent();
-        }
+        //     if (user != null)
+        //     {
+        //         user.Pin = changePinDto.NewPin;
+        //         await _userRepository.UpdateUserDetails(user.Id, new UserDto { Pin = user.Pin });
+        //     }
+        //     else if (admin != null)
+        //     {
+        //         admin.Pin = changePinDto.NewPin;
+        //         await _adminRepository.UpdateAdminDetails(admin.Id, new AdminDto { Pin = admin.Pin });
+        //     }
+
+        //     return NoContent();
+        // }
     }
 }

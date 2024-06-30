@@ -1,14 +1,15 @@
+using Application.Admins.Commands;
+using Application.Admins.Queries;
 using Application.Dto;
-using Api.Helpers;
-using Application.Interfaces;
+using Application.Users.Commands;
+using Application.Users.Queries;
 using Application.Validator;
-using Domain.Entities;
-using Infrastructure.Services;
-using FluentValidation.Results;
 using AutoMapper;
+using FluentValidation.Results;
+using Infrastructure.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace Api.Controllers
 {
@@ -16,21 +17,19 @@ namespace Api.Controllers
     [Route("api/admin")]
     public class AdminController : ControllerBase
     {
-        private readonly IAdminRepository _adminRepository;
-        private readonly IMapper _mapper;
+        private readonly IMediator _mediator;
         private readonly JwtTokenService _jwtTokenService;
 
-        public AdminController(IAdminRepository adminRepository, IMapper mapper, JwtTokenService jwtTokenService)
+        public AdminController(IMediator mediator, JwtTokenService jwtTokenService)
         {
-            _adminRepository = adminRepository;
-            _mapper = mapper;
+            _mediator = mediator;
             _jwtTokenService = jwtTokenService;
         }
+    
 
-        [HttpPost("create")]
+        [HttpPost("register")]
         public async Task<IActionResult> CreateAdmin([FromBody] AdminDto adminDto)
         {
-
             AdminValidator validator = new();
             ValidationResult result = validator.Validate(adminDto);
 
@@ -38,74 +37,66 @@ namespace Api.Controllers
             {
                 List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
                 string errorMessage = string.Join("\n", errors);
-
                 return BadRequest(errorMessage);
-            }
+            }  
 
-
-            var newAdmin = _mapper.Map<Admin>(adminDto);
-            var existingUser = await _adminRepository.GetAdminByEmail(newAdmin.Email);
-
-            if (existingUser != null)
+            var command = new RegisterAdminCommand
             {
-                return BadRequest("User email already exists.");
+                Email = adminDto.Email,
+                Password = adminDto.Password,
+                FirstName = adminDto.FirstName,
+                LastName = adminDto.LastName,
+                Pin = adminDto.Pin
+            };
+
+            try
+            {
+                var createdAdmin = await _mediator.Send(command);
+                return Ok(new { createdAdmin });
             }
-
-
-            Random random = new();
-            long AccountNumber = (long)(random.NextDouble() * 9000000000L) + 1000000000L;
-
-            newAdmin.Balance = 0;
-            newAdmin.OpeningDate = DateTime.Now;
-            newAdmin.AccountNumber = AccountNumber;
-            newAdmin.Role = "Admin";
-
-
-
-            // Hash the password after validation
-            newAdmin.Password = BCrypt.Net.BCrypt.HashPassword(newAdmin.Password);
-
-            var createdAdmin = await _adminRepository.Register(newAdmin);
-
-            return Ok(new { createdAdmin });
+            catch (Exception )
+            {
+                return StatusCode(500, "Internal server error");
+            }
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] OnlineLoginDto loginDto)
         {
-            var admin = await _adminRepository.Login(loginDto);
+            var query = new LoginAdminQuery { LoginDto = loginDto };
+            var admin = await _mediator.Send(query);
+
             if (admin == null)
             {
                 return Unauthorized("Invalid credentials.");
             }
 
-            var token = _jwtTokenService.GenerateToken(admin.Email);
+
+            var token = _jwtTokenService.GenerateToken(admin.Email);// Replace with actual JWT token generation
             return Ok(new { token });
         }
-
 
         [Authorize(Roles = "Admin")]
         [HttpPost("updateAdminDetails/{id}")]
         public async Task<IActionResult> UpdateAdmin(int id, [FromBody] AdminDto adminDto)
         {
-            var existingAdmin = await _adminRepository.GetAdminById(id);
-            if (existingAdmin == null || existingAdmin.Role != "Admin")
-            {
-                return NotFound("Admin not found.");
-            }
+            var command = new UpdateAdminCommand { Id = id, AdminDto = adminDto };
+            await _mediator.Send(command);
 
-            await _adminRepository.UpdateAdminDetails(id, adminDto);
             return NoContent();
         }
 
-        // [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("getAdminDetails/{id}")]
         public async Task<IActionResult> GetAdminById(int id)
         {
-            var admin = await _adminRepository.GetAdminById(id);
-            if (admin == null || admin.Role != "Admin")
+            var query = new GetAdminByIdQuery { Id = id };
+            var admin = await _mediator.Send(query);
+
+            if (admin == null)
             {
                 return NotFound("Admin not found.");
             }
+
             return Ok(admin);
         }
 
@@ -113,7 +104,9 @@ namespace Api.Controllers
         [HttpGet("getAllAdmins")]
         public async Task<IActionResult> GetAllAdmins()
         {
-            var admins = await _adminRepository.GetAllAdmins();
+            var query = new GetAllAdminsQuery();
+            var admins = await _mediator.Send(query);
+
             return Ok(new { admins, totalAdmins = admins.Count });
         }
 
@@ -121,7 +114,9 @@ namespace Api.Controllers
         [HttpGet("getAllUsers")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _adminRepository.GetAllUsers();
+            var query = new GetAllUsersQuery();
+            var users = await _mediator.Send(query);
+
             return Ok(new { users, totalUsers = users.Count });
         }
 
@@ -129,28 +124,28 @@ namespace Api.Controllers
         [HttpDelete("deleteAdmin/{id}")]
         public async Task<IActionResult> DeleteAdmin(int id)
         {
-            var admin = await _adminRepository.GetAdminById(id);
-            if (admin == null || admin.Role != "Admin")
-            {
-                return NotFound("Admin not found.");
-            }
+            var command = new DeleteAdminCommand { Id = id };
+            await _mediator.Send(command);
 
-            await _adminRepository.DeleteAdminAccount(id);
             return NoContent();
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("deleteUser/{email}")]
-        public async Task<IActionResult> DeleteUser(string email)
+        [HttpDelete("deleteUser/{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _adminRepository.GetUserByEmail(email);
-            if (user == null || user.Role != "User")
-            {
-                return NotFound("User not found.");
-            }
+            var command = new DeleteUserCommand { Id = id };
+            var result = await _mediator.Send(command);
 
-            await _adminRepository.DeleteUserAccount(email);
-            return NoContent();
+
+            if (result)
+            {
+                return Ok($"User with ID {id} deleted successfully.");
+            }
+            else
+            {
+                return NotFound($"User with ID {id} not found.");
+            }
         }
     }
 }
