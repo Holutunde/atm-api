@@ -1,10 +1,11 @@
 using FluentValidation;
 using Application.Dto;
 using System.Text.RegularExpressions;
+using Application.Admins.Commands;
 
 namespace Application.Validator
 {
-    public class AdminValidator : AbstractValidator<AdminDto>
+    public class AdminValidator : AbstractValidator<RegisterAdminCommand>
     {
         public AdminValidator()
         {

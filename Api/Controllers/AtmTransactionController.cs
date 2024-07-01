@@ -180,30 +180,27 @@ namespace Api.Controllers
         }
 
 
-        // [Authorize]
-        // [HttpPost("changePin")]
-        // public async Task<IActionResult> ChangePin([FromBody] ChangePinDto changePinDto)
-        // {
-        //     GetEmailService getEmailService = new();
+        [Authorize]
+        [HttpPost("changePin")]
+        public async Task<IActionResult> ChangePin([FromBody] ChangePinDto changePinDto)
+        {
+            GetEmailService getEmailService = new();
 
-        //     var accountNumber = getEmailService.GetAccountNumberFromToken(User); ;
+            var accountNumber = getEmailService.GetAccountNumberFromToken(User); ;
+            var user = await _mediator.Send(new GetUserByAccountNumberQuery { AccountNumber = accountNumber });
+            var admin = user == null ? await _mediator.Send(new GetAdminByAccountNumberQuery { AccountNumber = accountNumber }) : null;
+            if (user == null && admin == null) return Unauthorized();
 
-        //     var user = await _userRepository.GetUserByAccountNumber(accountNumber);
-        //     var admin = user == null ? await _adminRepository.GetAdminByAccountNumber(accountNumber) : null;
-        //     if (user == null && admin == null) return Unauthorized();
+            if (user != null)
+            {
+               await _mediator.Send(new ChangeUserPinCommand { Id = user.Id, NewPin = changePinDto.NewPin });
+            }
+            else if (admin != null)
+            {
+               await _mediator.Send(new ChangeAdminPinCommand { Id = admin.Id, NewPin = changePinDto.NewPin });
+            }
 
-        //     if (user != null)
-        //     {
-        //         user.Pin = changePinDto.NewPin;
-        //         await _userRepository.UpdateUserDetails(user.Id, new UserDto { Pin = user.Pin });
-        //     }
-        //     else if (admin != null)
-        //     {
-        //         admin.Pin = changePinDto.NewPin;
-        //         await _adminRepository.UpdateAdminDetails(admin.Id, new AdminDto { Pin = admin.Pin });
-        //     }
-
-        //     return NoContent();
-        // }
+            return NoContent();
+        }
     }
 }

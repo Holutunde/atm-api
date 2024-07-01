@@ -1,10 +1,8 @@
 using Application.Admins.Commands;
 using Application.Admins.Queries;
-using Application.Dto;
 using Application.Users.Commands;
 using Application.Users.Queries;
 using Application.Validator;
-using AutoMapper;
 using FluentValidation.Results;
 using Infrastructure.Services;
 using MediatR;
@@ -28,10 +26,10 @@ namespace Api.Controllers
     
 
         [HttpPost("register")]
-        public async Task<IActionResult> CreateAdmin([FromBody] AdminDto adminDto)
+        public async Task<IActionResult> CreateAdmin([FromBody] RegisterAdminCommand command)
         {
             AdminValidator validator = new();
-            ValidationResult result = validator.Validate(adminDto);
+            ValidationResult result = validator.Validate(command);
 
             if (!result.IsValid)
             {
@@ -39,15 +37,6 @@ namespace Api.Controllers
                 string errorMessage = string.Join("\n", errors);
                 return BadRequest(errorMessage);
             }  
-
-            var command = new RegisterAdminCommand
-            {
-                Email = adminDto.Email,
-                Password = adminDto.Password,
-                FirstName = adminDto.FirstName,
-                LastName = adminDto.LastName,
-                Pin = adminDto.Pin
-            };
 
             try
             {
@@ -60,9 +49,9 @@ namespace Api.Controllers
             }
         }
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] OnlineLoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginAdminQuery query)
         {
-            var query = new LoginAdminQuery { LoginDto = loginDto };
+
             var admin = await _mediator.Send(query);
 
             if (admin == null)
@@ -70,26 +59,25 @@ namespace Api.Controllers
                 return Unauthorized("Invalid credentials.");
             }
 
+            var token = _jwtTokenService.GenerateToken(admin.Email, admin.Role);
 
-            var token = _jwtTokenService.GenerateToken(admin.Email);// Replace with actual JWT token generation
-            return Ok(new { token });
+            return Ok(new {admin, token });
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPost("updateAdminDetails/{id}")]
-        public async Task<IActionResult> UpdateAdmin(int id, [FromBody] AdminDto adminDto)
-        {
-            var command = new UpdateAdminCommand { Id = id, AdminDto = adminDto };
-            await _mediator.Send(command);
+        [HttpPut("updateAdminDetails")]
+        public async Task<IActionResult> UpdateAdmin([FromBody] UpdateAdminCommand command)
+        {   
+           var updatedAdmin =  await _mediator.Send(command);
 
-            return NoContent();
+            return Ok(updatedAdmin);
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("getAdminDetails/{id}")]
-        public async Task<IActionResult> GetAdminById(int id)
+        [HttpGet("getAdminDetails")]
+        public async Task<IActionResult> GetAdminById([FromBody] GetAdminByIdQuery query)
         {
-            var query = new GetAdminByIdQuery { Id = id };
+        
             var admin = await _mediator.Send(query);
 
             if (admin == null)
@@ -121,22 +109,11 @@ namespace Api.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpDelete("deleteAdmin/{id}")]
-        public async Task<IActionResult> DeleteAdmin(int id)
+        [HttpDelete("deleteAdmin")]
+        public async Task<IActionResult> DeleteAdmin([FromBody] int id )
         {
-            var command = new DeleteAdminCommand { Id = id };
-            await _mediator.Send(command);
 
-            return NoContent();
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("deleteUser/{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
-        {
-            var command = new DeleteUserCommand { Id = id };
-            var result = await _mediator.Send(command);
-
+            var result = await _mediator.Send(new DeleteAdminCommand { Id = id });
 
             if (result)
             {
@@ -146,6 +123,24 @@ namespace Api.Controllers
             {
                 return NotFound($"User with ID {id} not found.");
             }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("deleteUser")]
+        public async Task<IActionResult> DeleteUser([FromBody] int id)
+        {
+            var command = new DeleteUserCommand { Id = id };
+            var result = await _mediator.Send(command);
+
+            if (result)
+            {
+                return Ok($"User with ID {id} deleted successfully.");
+            }
+            else
+            {
+                return NotFound($"User with ID {id} not found.");
+            }
+        
         }
     }
 }

@@ -19,7 +19,8 @@ namespace Infrastructure.Services
             _audience = audience;
         }
 
-        public string GenerateToken(string email)
+
+        public string GenerateToken(string email, string role)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_key);
@@ -27,7 +28,8 @@ namespace Infrastructure.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Email, email)
+                    new Claim(ClaimTypes.Email, email),
+                    new Claim(ClaimTypes.Role, role)
                 }),
                 Expires = DateTime.UtcNow.AddDays(1),
                 Issuer = _issuer,

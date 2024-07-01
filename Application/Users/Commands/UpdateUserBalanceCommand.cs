@@ -1,7 +1,5 @@
 using MediatR;
 using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
-using Domain.Entities;
 
 namespace Application.Users.Commands
 {

@@ -61,9 +61,9 @@ namespace Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] OnlineLoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginUserQuery query)
         {
-            var query = new LoginUserQuery { LoginDto = loginDto };
+    
             var user = await _mediator.Send(query);
 
             if (user == null)
@@ -71,7 +71,7 @@ namespace Api.Controllers
                 return Unauthorized("Invalid credentials.");
             }
 
-            var token = _jwtTokenService.GenerateToken(user.Email);
+            var token = _jwtTokenService.GenerateToken(user.Email, user.Role);
             return Ok(new { token });
         }
 

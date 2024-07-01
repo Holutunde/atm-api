@@ -1,11 +1,3 @@
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.csproj.AssemblyReference.cache
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.GeneratedMSBuildEditorConfig.editorconfig
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.AssemblyInfoInputs.cache
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.AssemblyInfo.cs
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.csproj.CoreCompileInputs.cache
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.MvcApplicationPartsAssemblyInfo.cs
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.MvcApplicationPartsAssemblyInfo.cache
-/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.sourcelink.json
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/bin/Debug/net7.0/appsettings.Development.json
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/bin/Debug/net7.0/appsettings.json
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/bin/Debug/net7.0/Api
@@ -82,6 +74,14 @@
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/bin/Debug/net7.0/Domain.pdb
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/bin/Debug/net7.0/Application.pdb
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/bin/Debug/net7.0/Infrastructure.pdb
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.csproj.AssemblyReference.cache
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.GeneratedMSBuildEditorConfig.editorconfig
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.AssemblyInfoInputs.cache
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.AssemblyInfo.cs
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.csproj.CoreCompileInputs.cache
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.MvcApplicationPartsAssemblyInfo.cs
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.MvcApplicationPartsAssemblyInfo.cache
+/Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/Api.sourcelink.json
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/staticwebassets.build.json
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/staticwebassets.development.json
 /Users/apple/Documents/Programming Coding/C#/ATMAPI/Api/obj/Debug/net7.0/staticwebassets/msbuild.Api.Microsoft.AspNetCore.StaticWebAssets.props

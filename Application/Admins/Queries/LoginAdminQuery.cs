@@ -1,4 +1,4 @@
-using Application.Dto;
+
 using Domain.Entities;
 using Infrastructure.Data;
 using MediatR;
@@ -9,7 +9,8 @@ namespace Application.Admins.Queries
 {
     public class LoginAdminQuery : IRequest<Admin>
     {
-        public OnlineLoginDto LoginDto { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
     }
 
     public class LoginAdminQueryHandler : IRequestHandler<LoginAdminQuery, Admin>
@@ -23,8 +24,8 @@ namespace Application.Admins.Queries
 
         public async Task<Admin> Handle(LoginAdminQuery request, CancellationToken cancellationToken)
         {
-            var admin = await _context.Admins.SingleOrDefaultAsync(u => u.Email == request.LoginDto.Email, cancellationToken);
-            if (admin == null || !BCrypt.Net.BCrypt.Verify(request.LoginDto.Password, admin.Password))
+            var admin = await _context.Admins.SingleOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            if (admin == null || !BCrypt.Net.BCrypt.Verify(request.Password, admin.Password))
             {
                 return null;
             }

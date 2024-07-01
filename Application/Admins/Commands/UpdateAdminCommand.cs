@@ -9,7 +9,11 @@ namespace Application.Admins.Commands
     public class UpdateAdminCommand : IRequest<Admin>
     {
         public int Id { get; set; }
-        public AdminDto AdminDto { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public int Pin { get; set; }
     }
 
     public class UpdateAdminCommandHandler : IRequestHandler<UpdateAdminCommand, Admin>
@@ -27,11 +31,11 @@ namespace Application.Admins.Commands
 
             if (admin != null)
             {
-                admin.FirstName = request.AdminDto.FirstName;
-                admin.LastName = request.AdminDto.LastName;
-                admin.Email = request.AdminDto.Email;
-                admin.Password = request.AdminDto.Password;
-                admin.Pin = request.AdminDto.Pin;
+                admin.FirstName = request.FirstName;
+                admin.LastName = request.LastName;
+                admin.Email = request.Email;
+                admin.Password = request.Password;
+                admin.Pin = request.Pin;
 
                 _context.Admins.Update(admin);
                 await _context.SaveChangesAsync(cancellationToken);
