@@ -1,11 +1,9 @@
 using Application.Admins.Commands;
 using Application.Admins.Queries;
 using Application.Dto;
-using Application.Interfaces;
 using Application.Users.Commands;
 using Application.Users.Queries;
 using Application.Validator;
-using Domain.Entities;
 using FluentValidation.Results;
 using Infrastructure.Services;
 using MediatR;

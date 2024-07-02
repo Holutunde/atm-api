@@ -21,7 +21,7 @@ namespace Application.Admins.Queries
 
         public async Task<List<Admin>> Handle(GetAllAdminsQuery request, CancellationToken cancellationToken)
         {
-            // Retrieve all admins from the database
+ 
             var admins = await _context.Admins.ToListAsync(cancellationToken);
             return admins;
         }

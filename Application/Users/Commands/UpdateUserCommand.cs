@@ -9,8 +9,13 @@ namespace Application.Users.Commands
     public class UpdateUserCommand : IRequest<User>
     {
         public int Id { get; set; }
-        public UserDto UserDto { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public int Pin { get; set; }
     }
+
 
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, User>
     {
@@ -27,11 +32,11 @@ namespace Application.Users.Commands
 
             if (user != null)
             {
-                user.FirstName = request.UserDto.FirstName;
-                user.LastName = request.UserDto.LastName;
-                user.Email = request.UserDto.Email;
-                user.Password = request.UserDto.Password;
-                user.Pin = request.UserDto.Pin;
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.Email = request.Email;
+                user.Password = request.Password;
+                user.Pin = request.Pin;
 
                 _context.Users.Update(user);
                 await _context.SaveChangesAsync(cancellationToken);

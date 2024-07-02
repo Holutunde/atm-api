@@ -28,10 +28,10 @@ namespace Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserDto userDto)
+        public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
         {
-            UserValidator validator = new UserValidator();
-            ValidationResult result = validator.Validate(userDto);
+            UserValidator validator = new();
+            ValidationResult result = validator.Validate(command);
 
             if (!result.IsValid)
             {
@@ -40,14 +40,6 @@ namespace Api.Controllers
                 return BadRequest(errorMessage);
             }
 
-            var command = new RegisterUserCommand
-            {
-                Email = userDto.Email,
-                Password = userDto.Password,
-                FirstName = userDto.FirstName,
-                LastName = userDto.LastName,
-                Pin = userDto.Pin
-            };
 
             try
             {
@@ -107,12 +99,11 @@ namespace Api.Controllers
 
         [Authorize(Roles = "Admin,User")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDto userDto)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserCommand command)
         {
-            var command = new UpdateUserCommand { Id = id, UserDto = userDto };
-            await _mediator.Send(command);
+            var updatedUser = await _mediator.Send(command);
 
-            return NoContent();
+            return Ok(updatedUser);
         }
 
         [Authorize(Roles = "Admin")]

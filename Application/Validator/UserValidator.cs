@@ -3,10 +3,11 @@ using Domain.Enum;
 using System;
 using System.Linq;
 using Application.Dto;
+using Application.Admins.Commands;
 
 namespace Application.Validator
 {
-    public class UserValidator : AbstractValidator<UserDto>
+    public class UserValidator : AbstractValidator<RegisterUserCommand>
     {
         public UserValidator()
         {
