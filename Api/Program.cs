@@ -1,6 +1,5 @@
 ﻿using Infrastructure.Services;
 using Infrastructure;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -13,7 +12,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Register MediatR with Application services
 builder.Services.AddApplicationServices();
 
 var configuration = builder.Configuration.GetSection("Jwt");

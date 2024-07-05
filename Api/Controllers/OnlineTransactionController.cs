@@ -1,6 +1,8 @@
 using Application.Admins.Commands;
 using Application.Admins.Queries;
+using Application.Atms.Commands;
 using Application.Dto;
+using Application.Online.Commands;
 using Application.Transactions.Commands;
 using Application.Users.Commands;
 using Application.Users.Queries;
@@ -51,19 +53,15 @@ namespace Api.Controllers
         {
             var email = GetCurrentEmail();
 
-            var user = await GetCurrentUserByEmail(email);
-            if (user != null)
+            var command = new CheckBalanceOnlineCommand { Email = email };
+            var (balance, errorMessage) = await _mediator.Send(command);
+
+            if (!string.IsNullOrEmpty(errorMessage))
             {
-                return Ok(new { balance = user.Balance });
+                return Unauthorized();
             }
 
-            var admin = await GetCurrentAdminByEmail(email);
-            if (admin != null)
-            {
-                return Ok(new { balance = admin.Balance });
-            }
-
-            return Unauthorized();
+            return Ok(new { balance });
         }
 
         [Authorize]
@@ -71,103 +69,36 @@ namespace Api.Controllers
         public async Task<IActionResult> Deposit([FromBody] DepositDto depositDto)
         {
             var email = GetCurrentEmail();
+            var command = new DepositOnlineCommand{ Email = email, Amount = depositDto.Amount };
+            var (balance, errorMessage) = await _mediator.Send(command);
 
-            var user = await GetCurrentUserByEmail(email);
-
-            var admin = user == null ? await GetCurrentAdminByEmail(email) : null;
-            if (user == null && admin == null)
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
                 return Unauthorized();
-
-            if (user != null)
-            {
-                user.Balance += depositDto.Amount;
-                await _mediator.Send(new UpdateUserBalanceCommand { Id = user.Id, NewBalance = user.Balance });
-            }
-            else if (admin != null)
-            {
-                await _mediator.Send(new UpdateAdminBalanceCommand { Id = admin.Id, NewBalance = admin.Balance + depositDto.Amount });
             }
 
-            return Ok(new { balance = user?.Balance ?? admin.Balance });
+            return Ok(new { balance });
         }
 
         [Authorize]
-        [HttpPost("transfer")]
-public async Task<IActionResult> Transfer([FromBody] TransferDto transferDto)
-{
-    var email = GetCurrentEmail();
+     [HttpPost("transfer")]
+   public async Task<IActionResult> Transfer([FromBody] TransferDto transferDto)
+     {
+            var email = GetCurrentEmail();
+            var command = new TransferOnlineCommand { SenderEmail = email, ReceiverAccountNumber = transferDto.ReceiverAccountNumber, Amount = transferDto.Amount };
+            var (senderBalance, receiverBalance, errorMessage) = await _mediator.Send(command);
 
-    var sender = await GetCurrentUserByEmail(email);
-    var adminSender = sender == null ? await GetCurrentAdminByEmail(email) : null;
-    if (sender == null && adminSender == null)
-        return Unauthorized();
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                if (errorMessage == "Unauthorized" || errorMessage == "Insufficient balance.")
+                {
+                    return BadRequest(errorMessage);
+                }
+                return NotFound(errorMessage);
+            }
 
-    var senderAccountNumber = sender?.AccountNumber ?? adminSender.AccountNumber;
-    var senderBalance = sender?.Balance ?? adminSender.Balance;
-
-    // Check if sender account number is the same as receiver account number
-    if (senderAccountNumber == transferDto.ReceiverAccountNumber)
-    {
-        return BadRequest("Sender and receiver account numbers cannot be the same.");
-    }
-
-    if (senderBalance < transferDto.Amount)
-    {
-        return BadRequest("Insufficient balance.");
-    }
-
-    var receiverUser = await _mediator.Send(new GetUserByAccountNumberQuery { AccountNumber = transferDto.ReceiverAccountNumber });
-    var receiverAdmin = receiverUser == null 
-        ? await _mediator.Send(new GetAdminByAccountNumberQuery { AccountNumber = transferDto.ReceiverAccountNumber }) 
-        : null;
-
-    if (receiverUser == null && receiverAdmin == null)
-    {
-        return NotFound("Receiver account not found.");
-    }
-
-    // Deduct amount from sender
-    if (sender != null)
-    {
-        sender.Balance -= transferDto.Amount;
-        await _mediator.Send(new UpdateUserBalanceCommand { Id = sender.Id, NewBalance = sender.Balance });
-    }
-    else if (adminSender != null)
-    {
-        adminSender.Balance -= transferDto.Amount;
-        await _mediator.Send(new UpdateAdminBalanceCommand { Id = adminSender.Id, NewBalance = adminSender.Balance });
-    }
-
-    // Add amount to receiver
-    if (receiverUser != null)
-    {
-        receiverUser.Balance += transferDto.Amount;
-        await _mediator.Send(new UpdateUserBalanceCommand { Id = receiverUser.Id, NewBalance = receiverUser.Balance });
-    }
-    else if (receiverAdmin != null)
-    {
-        receiverAdmin.Balance += transferDto.Amount;
-        await _mediator.Send(new UpdateAdminBalanceCommand { Id = receiverAdmin.Id, NewBalance = receiverAdmin.Balance });
-    }
-
-    // Assuming you have a method to add transactions
-    Transaction transaction = new()
-    {
-        SenderAccountNumber = senderAccountNumber,
-        ReceiverAccountNumber = transferDto.ReceiverAccountNumber,
-        Amount = transferDto.Amount,
-        TransactionDate = DateTime.UtcNow,
-        TransactionType = "Transfer"
-    };
-
-    await _mediator.Send(new CreateTransactionCommand { Transaction = transaction });
-
-            return Ok(new
-    {
-        senderBalance = sender?.Balance ?? adminSender.Balance,
-        receiverBalance = receiverUser?.Balance ?? receiverAdmin.Balance
-    });
-}
+            return Ok(new { senderBalance, receiverBalance });
+        }
 
 
 
@@ -176,21 +107,13 @@ public async Task<IActionResult> Transfer([FromBody] TransferDto transferDto)
         public async Task<IActionResult> ChangePin([FromBody] ChangePinDto changePinDto)
         {
             var email = GetCurrentEmail();
+            var command = new ChangePinOnlineCommand { Email = email, NewPin = changePinDto.NewPin };
+            var errorMessage = await _mediator.Send(command);
 
-            var user = await GetCurrentUserByEmail(email);
-            var admin = user == null ? await GetCurrentAdminByEmail(email) : null;
-            if (user == null && admin == null)
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
                 return Unauthorized();
-
-            if (user != null)
-            {
-                await _mediator.Send(new ChangeUserPinCommand { Id = user.Id, NewPin = changePinDto.NewPin });
             }
-            else if (admin != null)
-            {
-                await _mediator.Send(new ChangeAdminPinCommand { Id = admin.Id, NewPin = changePinDto.NewPin });
-            }
-
 
             return NoContent();
         }

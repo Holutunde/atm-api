@@ -1,10 +1,9 @@
 using FluentValidation;
-using Application.Dto;
-using System.Text.RegularExpressions;
+using Application.Atms.Commands;
 
 namespace Application.Validator
 {
-    public class AccessValidator : AbstractValidator<AtmLoginDto>
+    public class AccessValidator : AbstractValidator<AtmAccessCommand>
     {
         public AccessValidator()
         {

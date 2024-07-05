@@ -2,9 +2,6 @@ using Application.Admins.Commands;
 using Application.Admins.Queries;
 using Application.Users.Commands;
 using Application.Users.Queries;
-using Application.Validator;
-using FluentValidation.Results;
-using Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,53 +13,35 @@ namespace Api.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IMediator _mediator;
-        private readonly JwtTokenService _jwtTokenService;
 
-        public AdminController(IMediator mediator, JwtTokenService jwtTokenService)
+
+        public AdminController(IMediator mediator)
         {
             _mediator = mediator;
-            _jwtTokenService = jwtTokenService;
+
         }
     
 
         [HttpPost("register")]
         public async Task<IActionResult> CreateAdmin([FromBody] RegisterAdminCommand command)
         {
-            AdminValidator validator = new();
-            ValidationResult result = validator.Validate(command);
-
-            if (!result.IsValid)
-            {
-                List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
-                string errorMessage = string.Join("\n", errors);
-                return BadRequest(errorMessage);
-            }  
-
-            try
-            {
-                var createdAdmin = await _mediator.Send(command);
-                return Ok(new { createdAdmin });
-            }
-            catch (Exception )
-            {
-                return StatusCode(500, "Internal server error");
-            }
+            var createdAdmin = await _mediator.Send(command);
+            return Ok(new { createdAdmin });
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginAdminQuery query)
         {
 
-            var admin = await _mediator.Send(query);
+            var (admin, token) = await _mediator.Send(query);
 
             if (admin == null)
             {
                 return Unauthorized("Invalid credentials.");
             }
 
-            var token = _jwtTokenService.GenerateToken(admin.Email, admin.Role);
-
-            return Ok(new {admin, token });
+            return Ok(new { admin, token });
         }
+    
 
         [Authorize(Roles = "Admin")]
         [HttpPut("updateAdminDetails")]
