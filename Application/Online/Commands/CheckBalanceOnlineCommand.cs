@@ -36,9 +36,13 @@ namespace Application.Online.Commands
             if (admin != null)
             {
                 return (admin.Balance, null);
+
             }
+            
 
             return (null, "Unauthorized");
         }
     }
 }
+
+

@@ -1,4 +1,6 @@
 using Domain.Entities;
+using FluentValidation;
+using FluentValidation.Results;
 using Infrastructure.Data;
 using MediatR;
 
@@ -17,14 +19,24 @@ namespace Application.Admins.Commands
     public class RegisterAdminCommandHandler : IRequestHandler<RegisterAdminCommand, Admin>
     {
         private readonly DataContext _context;
+        private readonly IValidator<RegisterAdminCommand> _validator;
 
-        public RegisterAdminCommandHandler(DataContext context)
+        public RegisterAdminCommandHandler(DataContext context, IValidator<RegisterAdminCommand> validator)
         {
             _context = context;
+            _validator = validator;
         }
 
         public async Task<Admin> Handle(RegisterAdminCommand request, CancellationToken cancellationToken)
         {
+            ValidationResult result = _validator.Validate(request);
+
+            if (!result.IsValid)
+            {
+                List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
+                string errorMessage = string.Join("\n", errors);
+                throw new ValidationException(errorMessage); 
+            }
             Random random = new();
             var newAdmin = new Admin
             {
