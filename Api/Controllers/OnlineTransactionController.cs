@@ -18,15 +18,12 @@ namespace Api.Controllers
     [Route("api/transactions")]
     public class OnlineTransactionController : ControllerBase
     {
-
         private readonly IMediator _mediator;
-
         private readonly GetEmailService _getEmailService;
 
         public OnlineTransactionController(
            IMediator mediator,
-            GetEmailService getEmailService
-        )
+           GetEmailService getEmailService)
         {
             _mediator = mediator;
             _getEmailService = getEmailService;
@@ -39,7 +36,7 @@ namespace Api.Controllers
 
         private async Task<User> GetCurrentUserByEmail(string email)
         {
-            return await _mediator.Send(new GetUserByEmailQuery{Email = email});
+            return await _mediator.Send(new GetUserByEmailQuery { Email = email });
         }
 
         private async Task<Admin> GetCurrentAdminByEmail(string email)
@@ -51,71 +48,97 @@ namespace Api.Controllers
         [HttpGet("checkBalance")]
         public async Task<IActionResult> CheckBalance()
         {
-            var email = GetCurrentEmail();
-
-            var command = new CheckBalanceOnlineCommand { Email = email };
-            var (balance, errorMessage) = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+            try
             {
-                return Unauthorized();
-            }
+                var email = GetCurrentEmail();
 
-            return Ok(new { balance });
+                var command = new CheckBalanceOnlineCommand { Email = email };
+                var (balance, errorMessage) = await _mediator.Send(command);
+
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return Unauthorized();
+                }
+
+                return Ok(new { balance });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize]
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] DepositDto depositDto)
         {
-            var email = GetCurrentEmail();
-            var command = new DepositOnlineCommand{ Email = email, Amount = depositDto.Amount };
-            var (balance, errorMessage) = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+            try
             {
-                return Unauthorized();
-            }
+                var email = GetCurrentEmail();
+                var command = new DepositOnlineCommand { Email = email, Amount = depositDto.Amount };
+                var (balance, errorMessage) = await _mediator.Send(command);
 
-            return Ok(new { balance });
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return Unauthorized();
+                }
+
+                return Ok(new { balance });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize]
-     [HttpPost("transfer")]
-   public async Task<IActionResult> Transfer([FromBody] TransferDto transferDto)
-     {
-            var email = GetCurrentEmail();
-            var command = new TransferOnlineCommand { SenderEmail = email, ReceiverAccountNumber = transferDto.ReceiverAccountNumber, Amount = transferDto.Amount };
-            var (senderBalance, receiverBalance, errorMessage) = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+        [HttpPost("transfer")]
+        public async Task<IActionResult> Transfer([FromBody] TransferDto transferDto)
+        {
+            try
             {
-                if (errorMessage == "Unauthorized" || errorMessage == "Insufficient balance.")
+                var email = GetCurrentEmail();
+                var command = new TransferOnlineCommand { SenderEmail = email, ReceiverAccountNumber = transferDto.ReceiverAccountNumber, Amount = transferDto.Amount };
+                var (senderBalance, receiverBalance, errorMessage) = await _mediator.Send(command);
+
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    return BadRequest(errorMessage);
+                    if (errorMessage == "Unauthorized" || errorMessage == "Insufficient balance.")
+                    {
+                        return BadRequest(errorMessage);
+                    }
+                    return NotFound(errorMessage);
                 }
-                return NotFound(errorMessage);
+
+                return Ok(new { senderBalance, receiverBalance });
             }
-
-            return Ok(new { senderBalance, receiverBalance });
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
-
-
 
         [Authorize]
         [HttpPost("changePin")]
         public async Task<IActionResult> ChangePin([FromBody] ChangePinDto changePinDto)
         {
-            var email = GetCurrentEmail();
-            var command = new ChangePinOnlineCommand { Email = email, NewPin = changePinDto.NewPin };
-            var errorMessage = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+            try
             {
-                return Unauthorized();
-            }
+                var email = GetCurrentEmail();
+                var command = new ChangePinOnlineCommand { Email = email, NewPin = changePinDto.NewPin };
+                var errorMessage = await _mediator.Send(command);
 
-            return NoContent();
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return Unauthorized();
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

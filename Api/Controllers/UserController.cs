@@ -1,9 +1,7 @@
 using Application.Dto;
 using Application.Users.Commands;
 using Application.Users.Queries;
-using Application.Validator;
 using Infrastructure.Services;
-using FluentValidation.Results;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,96 +28,118 @@ namespace Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserCommand command)
         {
-            UserValidator validator = new();
-            ValidationResult result = validator.Validate(command);
-
-            if (!result.IsValid)
-            {
-                List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
-                string errorMessage = string.Join(", ", errors);
-                return BadRequest(errorMessage);
-            }
-
-
             try
             {
                 var createdUser = await _mediator.Send(command);
                 return Created("", new { createdUser });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, ex.Message);
             }
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserQuery query)
         {
-    
-            var user = await _mediator.Send(query);
-
-            if (user == null)
+            try
             {
-                return Unauthorized("Invalid credentials.");
-            }
+                var user = await _mediator.Send(query);
 
-            var token = _jwtTokenService.GenerateToken(user.Email, user.Role);
-            return Ok(new { token });
+                if (user == null)
+                {
+                    return Unauthorized("Invalid credentials.");
+                }
+
+                var token = _jwtTokenService.GenerateToken(user.Email, user.Role);
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize(Roles = "Admin,User")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
-            var query = new GetUserByIdQuery { Id = id };
-            var user = await _mediator.Send(query);
-
-            if (user == null)
+            try
             {
-                return NotFound("User not found.");
-            }
+                var query = new GetUserByIdQuery { Id = id };
+                var user = await _mediator.Send(query);
 
-            return Ok(user);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize(Roles = "Admin,User")]
         [HttpGet("email/{email}")]
         public async Task<IActionResult> GetUserByEmail(string email)
         {
-            var query = new GetUserByEmailQuery { Email = email };
-            var user = await _mediator.Send(query);
-
-            if (user == null)
+            try
             {
-                return NotFound("User not found.");
-            }
+                var query = new GetUserByEmailQuery { Email = email };
+                var user = await _mediator.Send(query);
 
-            return Ok(user);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize(Roles = "Admin,User")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserCommand command)
         {
-            var updatedUser = await _mediator.Send(command);
-
-            return Ok(updatedUser);
+            try
+            {
+                var updatedUser = await _mediator.Send(command);
+                return Ok(updatedUser);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var command = new DeleteUserCommand { Id = id };
-            var result = await _mediator.Send(command);
+            try
+            {
+                var command = new DeleteUserCommand { Id = id };
+                var result = await _mediator.Send(command);
 
-            if (result)
-            {
-                return Ok($"User with ID {id} deleted successfully.");
+                if (result)
+                {
+                    return Ok($"User with ID {id} deleted successfully.");
+                }
+                else
+                {
+                    return NotFound($"User with ID {id} not found.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return NotFound($"User with ID {id} not found.");
+                return StatusCode(500, ex.Message);
             }
         }
     }

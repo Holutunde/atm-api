@@ -5,111 +5,137 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-
-
 namespace Api.Controllers
 {
     [ApiController]
     [Route("api/atm")]
     public class AtmTransactionController : ControllerBase
     {
-
         private readonly IMediator _mediator;
-
         private readonly GetEmailService _getEmailService;
-
         private readonly JwtTokenService _jwtTokenService;
 
-
-     public AtmTransactionController(IMediator mediator, JwtTokenService jwtTokenService, GetEmailService getEmailService
-)
+        public AtmTransactionController(IMediator mediator, JwtTokenService jwtTokenService, GetEmailService getEmailService)
         {
             _mediator = mediator;
             _jwtTokenService = jwtTokenService;
-             _getEmailService = getEmailService;
-             
+            _getEmailService = getEmailService;
         }
 
         [HttpPost("access")]
         public async Task<IActionResult> Access([FromBody] AtmAccessCommand command)
         {
-            var result = await _mediator.Send(command);
-
-            if (result.ErrorMessage != null)
+            try
             {
-                return BadRequest(new { error = result.ErrorMessage });
+                var (Token, ErrorMessage) = await _mediator.Send(command);
+
+                if (ErrorMessage != null)
+                {
+                    return BadRequest(new { error = ErrorMessage });
+                }
+
+                return Ok(new { token = Token });
             }
-
-            return Ok(new { token = result.Token });
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
-
 
         [Authorize]
         [HttpGet("checkBalance")]
         public async Task<IActionResult> CheckBalance()
         {
-            var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
-            var command = new CheckBalanceCommand { AccountNumber = accountNumber };
-            var (balance, errorMessage) = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+            try
             {
-                return Unauthorized();
-            }
+                var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
+                var command = new CheckBalanceCommand { AccountNumber = accountNumber };
+                var (balance, errorMessage) = await _mediator.Send(command);
 
-            return Ok(new { balance });
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return Unauthorized();
+                }
+
+                return Ok(new { balance });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize]
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] DepositCommand depositDto)
         {
-            var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
-            var command = new DepositCommand { AccountNumber = accountNumber, Amount = depositDto.Amount };
-            var (balance, errorMessage) = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+            try
             {
-                return Unauthorized();
-            }
+                var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
+                var command = new DepositCommand { AccountNumber = accountNumber, Amount = depositDto.Amount };
+                var (balance, errorMessage) = await _mediator.Send(command);
 
-            return Ok(new { balance });
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return Unauthorized();
+                }
+
+                return Ok(new { balance });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize]
         [HttpPost("transfer")]
         public async Task<IActionResult> Transfer([FromBody] TransferDto transferDto)
         {
-            var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
-            var command = new TransferCommand { SenderAccountNumber = accountNumber, ReceiverAccountNumber = transferDto.ReceiverAccountNumber, Amount = transferDto.Amount };
-            var (senderBalance, receiverBalance, errorMessage) = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+            try
             {
-                if (errorMessage == "Unauthorized" || errorMessage == "Insufficient balance.")
-                {
-                    return BadRequest(errorMessage);
-                }
-                return NotFound(errorMessage);
-            }
+                var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
+                var command = new TransferCommand { SenderAccountNumber = accountNumber, ReceiverAccountNumber = transferDto.ReceiverAccountNumber, Amount = transferDto.Amount };
+                var (senderBalance, receiverBalance, errorMessage) = await _mediator.Send(command);
 
-            return Ok(new { senderBalance, receiverBalance });
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    if (errorMessage == "Unauthorized" || errorMessage == "Insufficient balance.")
+                    {
+                        return BadRequest(errorMessage);
+                    }
+                    return NotFound(errorMessage);
+                }
+
+                return Ok(new { senderBalance, receiverBalance });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [Authorize]
         [HttpPost("changePin")]
         public async Task<IActionResult> ChangePin([FromBody] ChangePinDto changePinDto)
         {
-            var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
-            var command = new ChangePinCommand { AccountNumber = accountNumber, NewPin = changePinDto.NewPin };
-            var errorMessage = await _mediator.Send(command);
-
-            if (!string.IsNullOrEmpty(errorMessage))
+            try
             {
-                return Unauthorized();
-            }
+                var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
+                var command = new ChangePinCommand { AccountNumber = accountNumber, NewPin = changePinDto.NewPin };
+                var errorMessage = await _mediator.Send(command);
 
-            return NoContent();
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    return Unauthorized();
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

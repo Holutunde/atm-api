@@ -8,7 +8,7 @@ namespace Application.Online.Commands
 {
     public class CheckBalanceOnlineCommand : IRequest<(double? Balance, string ErrorMessage)>
     {
-        public string Email { get; set; }
+        public required string Email { get; set; }
     }
 
     public class CheckBalanceCommandHandler : IRequestHandler<CheckBalanceOnlineCommand, (double? Balance, string ErrorMessage)>
