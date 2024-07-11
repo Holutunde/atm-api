@@ -5,21 +5,21 @@ using System.IO;
 
 namespace Infrastructure.Data
 {
-    public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
+    public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
-        public DataContext CreateDbContext(string[] args)
+        public ApplicationDbContext CreateDbContext(string[] args)
         {
             IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory() + "/../Api")
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            var builder = new DbContextOptionsBuilder<DataContext>();
+            var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             builder.UseSqlServer(connectionString);
 
-            return new DataContext(builder.Options);
+            return new ApplicationDbContext(builder.Options);
         }
     }
 }

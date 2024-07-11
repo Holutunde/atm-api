@@ -1,5 +1,5 @@
 using MediatR;
-using Infrastructure.Data;
+using Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Domain.Entities;
 
@@ -12,9 +12,9 @@ namespace Application.Users.Queries
 
     public class GetUserByAccountNumberQueryHandler : IRequestHandler<GetUserByAccountNumberQuery, User>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public GetUserByAccountNumberQueryHandler(DataContext context)
+        public GetUserByAccountNumberQueryHandler(IDataContext context)
         {
             _context = context;
         }

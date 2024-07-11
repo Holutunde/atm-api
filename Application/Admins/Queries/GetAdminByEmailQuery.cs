@@ -1,5 +1,5 @@
 using Domain.Entities;
-using Infrastructure.Data;
+using Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,17 +8,12 @@ namespace Application.Admins.Queries
 {
     public class GetAdminByEmailQuery : IRequest<Admin>
     {
-        public string Email { get; set; }
+        public required string Email { get; set; }
     }
 
-    public class GetAdminByEmailQueryHandler : IRequestHandler<GetAdminByEmailQuery, Admin>
+    public class GetAdminByEmailQueryHandler(IDataContext context) : IRequestHandler<GetAdminByEmailQuery, Admin>
     {
-        private readonly DataContext _context;
-
-        public GetAdminByEmailQueryHandler(DataContext context)
-        {
-            _context = context;
-        }
+        private readonly IDataContext _context = context;
 
         public async Task<Admin> Handle(GetAdminByEmailQuery request, CancellationToken cancellationToken)
         {

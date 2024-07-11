@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Application.Admins.Commands;
+using Application.Common.ResultsModel;
 
 namespace Api.Controllers
 {
@@ -15,14 +16,11 @@ namespace Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
-        private readonly JwtTokenService _jwtTokenService;
-
-        public UserController(IMediator mediator, IMapper mapper, JwtTokenService jwtTokenService)
+    
+        public UserController(IMediator mediator)
         {
             _mediator = mediator;
-            _mapper = mapper;
-            _jwtTokenService = jwtTokenService;
+         
         }
 
         [HttpPost("register")]
@@ -31,7 +29,7 @@ namespace Api.Controllers
             try
             {
                 var createdUser = await _mediator.Send(command);
-                return Created("", new { createdUser });
+                return Ok(createdUser);
             }
             catch (Exception ex)
             {
@@ -40,19 +38,13 @@ namespace Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginUserQuery query)
+        public async Task<IActionResult> Login([FromBody] LoginUserCommand command)
         {
             try
             {
-                var user = await _mediator.Send(query);
+                var token = await _mediator.Send(command);
 
-                if (user == null)
-                {
-                    return Unauthorized("Invalid credentials.");
-                }
-
-                var token = _jwtTokenService.GenerateToken(user.Email, user.Role);
-                return Ok(new { token });
+                return Ok(token);
             }
             catch (Exception ex)
             {
@@ -68,11 +60,6 @@ namespace Api.Controllers
             {
                 var query = new GetUserByIdQuery { Id = id };
                 var user = await _mediator.Send(query);
-
-                if (user == null)
-                {
-                    return NotFound("User not found.");
-                }
 
                 return Ok(user);
             }
@@ -90,11 +77,6 @@ namespace Api.Controllers
             {
                 var query = new GetUserByEmailQuery { Email = email };
                 var user = await _mediator.Send(query);
-
-                if (user == null)
-                {
-                    return NotFound("User not found.");
-                }
 
                 return Ok(user);
             }
@@ -126,16 +108,10 @@ namespace Api.Controllers
             try
             {
                 var command = new DeleteUserCommand { Id = id };
-                var result = await _mediator.Send(command);
+               await _mediator.Send(command);
+                return NoContent();
 
-                if (result)
-                {
-                    return Ok($"User with ID {id} deleted successfully.");
-                }
-                else
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
+
             }
             catch (Exception ex)
             {

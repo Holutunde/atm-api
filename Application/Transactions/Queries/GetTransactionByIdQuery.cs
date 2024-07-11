@@ -1,5 +1,5 @@
 using Domain.Entities;
-using Infrastructure.Data;
+using Application.Interfaces;
 using MediatR;
 
 namespace Application.Transactions.Queries
@@ -11,9 +11,9 @@ namespace Application.Transactions.Queries
 
     public class GetTransactionByIdQueryHandler : IRequestHandler<GetTransactionByIdQuery, Transaction>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public GetTransactionByIdQueryHandler(DataContext context)
+        public GetTransactionByIdQueryHandler(IDataContext context)
         {
             _context = context;
         }

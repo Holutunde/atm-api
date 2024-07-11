@@ -1,12 +1,11 @@
-using Application.Dto;
-using Domain.Entities;
-using Infrastructure.Data;
+using Application.Common.ResultsModel;
+using Application.Interfaces;
 using MediatR;
 
 
 namespace Application.Admins.Commands
 {
-    public class UpdateAdminCommand : IRequest<Admin>
+    public class UpdateAdminCommand : IRequest<Result>
     {
         public int Id { get; set; }
         public string Email { get; set; }
@@ -16,16 +15,11 @@ namespace Application.Admins.Commands
         public int Pin { get; set; }
     }
 
-    public class UpdateAdminCommandHandler : IRequestHandler<UpdateAdminCommand, Admin>
+    public class UpdateAdminCommandHandler(IDataContext context) : IRequestHandler<UpdateAdminCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context = context;
 
-        public UpdateAdminCommandHandler(DataContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<Admin> Handle(UpdateAdminCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(UpdateAdminCommand request, CancellationToken cancellationToken)
         {
             var admin = await _context.Admins.FindAsync(request.Id);
 
@@ -39,9 +33,11 @@ namespace Application.Admins.Commands
 
                 _context.Admins.Update(admin);
                 await _context.SaveChangesAsync(cancellationToken);
+
+                return Result.Success(admin, "Admin details updated successfully.");
             }
 
-            return admin;
+            return Result.Failure<UpdateAdminCommand>($"Admin with ID {request.Id} not found.");
         }
     }
 }

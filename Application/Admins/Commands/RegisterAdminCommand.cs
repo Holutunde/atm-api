@@ -1,13 +1,15 @@
+using Application.Common.ResultsModel;
+using Application.Interfaces;
+using Application.Validator;
 using Domain.Entities;
 using FluentValidation;
 using FluentValidation.Results;
-using Infrastructure.Data;
 using MediatR;
 
 
 namespace Application.Admins.Commands
 {
-    public class RegisterAdminCommand : IRequest<Admin>
+    public class RegisterAdminCommand : IRequest<Result>
     {
         public string Email { get; set; }
         public string Password { get; set; }
@@ -16,45 +18,39 @@ namespace Application.Admins.Commands
         public int Pin { get; set; }
     }
 
-    public class RegisterAdminCommandHandler : IRequestHandler<RegisterAdminCommand, Admin>
+    public class RegisterAdminCommandHandler(
+        IDataContext context,
+        IValidator<RegisterAdminCommand> validator,
+        IEmailSender emailSender, IAccountFactory accountFactory)
+        : IRequestHandler<RegisterAdminCommand, Result>
     {
-        private readonly DataContext _context;
-        private readonly IValidator<RegisterAdminCommand> _validator;
+        private readonly IEmailSender _emailSender = emailSender;
+        private readonly IDataContext _context = context;
+        private readonly IValidator<RegisterAdminCommand> _validator = validator;
+        private readonly IAccountFactory _accountFactory = accountFactory;
 
-        public RegisterAdminCommandHandler(DataContext context, IValidator<RegisterAdminCommand> validator)
+        public async Task<Result> Handle(RegisterAdminCommand request, CancellationToken cancellationToken)
         {
-            _context = context;
-            _validator = validator;
-        }
-
-        public async Task<Admin> Handle(RegisterAdminCommand request, CancellationToken cancellationToken)
-        {
+            AdminValidator validator = new();
             ValidationResult result = _validator.Validate(request);
 
             if (!result.IsValid)
             {
-                List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
-                string errorMessage = string.Join("\n", errors);
-                throw new ValidationException(errorMessage); 
+                var errors = result.Errors.Select(error => error.ErrorMessage).ToList();
+                var errorMessage = string.Join("\n", errors);
+                return Result.Failure<RegisterAdminCommand>(errorMessage);
             }
-            Random random = new();
-            var newAdmin = new Admin
-            {
-                Email = request.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Pin = request.Pin,
-                Balance = 0,
-                AccountNumber = (long)(random.NextDouble() * 9000000000L) + 1000000000L,
-                OpeningDate = DateTime.Now,
-                Role = "Admin"
-            };
+            
+            
+
+            var newAdmin = _accountFactory.CreateAccount<Admin>(request.Email, request.Password, request.FirstName, request.LastName, request.Pin, "Admin");
 
             await _context.Admins.AddAsync(newAdmin, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return newAdmin;
+            await _emailSender.SendEmailAsync(request.Email, "Registration Successful", "Welcome to our service!");
+
+            return Result.Success(newAdmin, "Admin registered successfully.");
         }
     }
 }

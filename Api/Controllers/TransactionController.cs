@@ -8,28 +8,9 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TransactionsController : ControllerBase
+    public class TransactionsController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public TransactionsController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateTransaction([FromBody] Transaction transaction)
-        {
-            try
-            {
-                await _mediator.Send(new CreateTransactionCommand { Transaction = transaction });
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpGet("id")]
         public async Task<IActionResult> GetTransactionById([FromBody] GetTransactionByIdQuery id)

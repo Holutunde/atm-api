@@ -1,34 +1,35 @@
-using Infrastructure.Data;
+using Application.Common.ResultsModel;
+using Application.Interfaces;
 using MediatR;
 
 namespace Application.Users.Commands
 {
-    public class DeleteUserCommand : IRequest<bool>
+    public class DeleteUserCommand : IRequest<Result>
     {
         public int Id { get; set; }
     }
-
-    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
+    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public DeleteUserCommandHandler(DataContext context)
+        public DeleteUserCommandHandler(IDataContext context)
         {
             _context = context;
         }
 
-        public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FindAsync(request.Id);
 
-            if (user != null)
+            if (user == null)
             {
-                _context.Users.Remove(user);
-                await _context.SaveChangesAsync(cancellationToken);
-                return true;
+                return Result.Failure<DeleteUserCommand>($"User with ID {request.Id} not found.");
             }
 
-            return false;
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync(cancellationToken);
+            return Result.Success($"User with ID {request.Id} deleted successfully.");
         }
     }
+
 }

@@ -1,27 +1,24 @@
+using Application.Admins.Commands;
 using Application.Admins.Queries;
+using Application.Common.ResultsModel;
 using Application.Users.Commands;
 using Application.Users.Queries;
-using Infrastructure.Data;
+using Application.Interfaces;
 using MediatR;
 
 namespace Application.Online.Commands
 {
-    public class ChangePinOnlineCommand : IRequest<string>
+    public class ChangePinOnlineCommand : IRequest<Result>
     {
-        public string Email { get; set; }
+        public required string Email { get; set; }
         public int NewPin { get; set; }
     }
 
-    public class ChangePinOnlineCommandHandler : IRequestHandler<ChangePinOnlineCommand, string>
+    public class ChangePinOnlineCommandHandler(IDataContext context) : IRequestHandler<ChangePinOnlineCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context = context;
 
-        public ChangePinOnlineCommandHandler(DataContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<string> Handle(ChangePinOnlineCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(ChangePinOnlineCommand request, CancellationToken cancellationToken)
         {
             var user = await new GetUserByEmailQueryHandler(_context).Handle(new GetUserByEmailQuery { Email = request.Email }, cancellationToken);
 
@@ -29,7 +26,7 @@ namespace Application.Online.Commands
 
 
             if (user == null && admin == null)
-                return "Unauthorized";
+                return Result.Failure<ChangePinOnlineCommand>("Unauthorized");
 
             if (user != null)
             {
@@ -40,7 +37,7 @@ namespace Application.Online.Commands
                 await new ChangeAdminPinCommandHandler(_context).Handle(new ChangeAdminPinCommand { Id = user.Id, NewPin = request.NewPin }, cancellationToken);
             }
 
-            return null;
+            return Result.Success("PIN changed successfully");
         }
     }
 }

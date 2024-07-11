@@ -1,40 +1,41 @@
+using Application.Common.ResultsModel;
 using Application.Admins.Queries;
 using Application.Users.Queries;
-using Infrastructure.Data;
+using Application.Interfaces;
 using MediatR;
 
 namespace Application.Atms.Commands
 {
-    public class CheckBalanceCommand : IRequest<(double? Balance, string ErrorMessage)>
+    public class CheckBalanceCommand : IRequest<Result>
     {
         public long AccountNumber { get; set; }
     }
 
-    public class CheckBalanceCommandHandler : IRequestHandler<CheckBalanceCommand, (double? Balance, string ErrorMessage)>
+    public class CheckBalanceCommandHandler : IRequestHandler<CheckBalanceCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public CheckBalanceCommandHandler(DataContext context)
+        public CheckBalanceCommandHandler(IDataContext context)
         {
             _context = context;
         }
 
-        public async Task<(double? Balance, string ErrorMessage)> Handle(CheckBalanceCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(CheckBalanceCommand request, CancellationToken cancellationToken)
         {
             var user = await new GetUserByAccountNumberQueryHandler(_context).Handle(new GetUserByAccountNumberQuery { AccountNumber = request.AccountNumber }, cancellationToken);
             if (user != null)
             {
-                return (user.Balance, null);
+                return Result.Success(user.Balance, "Balance retrieved successfully.");
             }
 
             var admin = await new GetAdminByAccountNumberQueryHandler(_context).Handle(new GetAdminByAccountNumberQuery { AccountNumber = request.AccountNumber }, cancellationToken);
 
             if (admin != null)
             {
-                return (admin.Balance, null);
+                return Result.Success(admin.Balance, "Balance retrieved successfully.");
             }
 
-            return (null, "Unauthorized");
+            return Result.Failure<CheckBalanceCommand>("Unauthorized");
         }
     }
 }

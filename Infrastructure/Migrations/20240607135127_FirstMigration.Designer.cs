@@ -6,7 +6,7 @@ using Infrastructure.Data;
 namespace Infrastructure.Migrations
 {
 
-    [DbContext(typeof(DataContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20240607135127_FirstMigration")]
     partial class FirstMigration
     {

@@ -1,31 +1,25 @@
 using Application.Admins.Queries;
+using Application.Common.ResultsModel;
 using Application.Users.Queries;
 using Application.Validator;
 using FluentValidation.Results;
-using Infrastructure.Data;
-using Infrastructure.Services;
+using Application.Interfaces;
 using MediatR;
 
 namespace Application.Atms.Commands
 {
-    public class AtmAccessCommand : IRequest<(string Token, string ErrorMessage)>
+    public class AtmAccessCommand : IRequest<Result>
     {
         public long AccountNumber { get; set; }
         public int Pin { get; set; }
     }
 
-    public class AtmAccessCommandHandler : IRequestHandler<AtmAccessCommand, (string Token, string ErrorMessage)>
+    public class AtmAccessCommandHandler(IDataContext context, IJwtTokenService jwtTokenService) : IRequestHandler<AtmAccessCommand, Result>
     {
-        private readonly DataContext _context;
-        private readonly JwtTokenService _jwtTokenService;
+        private readonly IDataContext _context = context;
+        private readonly IJwtTokenService _jwtTokenService = jwtTokenService;
 
-        public AtmAccessCommandHandler(DataContext context, JwtTokenService jwtTokenService)
-        {
-            _context = context;
-            _jwtTokenService = jwtTokenService;
-        }
-
-        public async Task<(string Token, string ErrorMessage)> Handle(AtmAccessCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(AtmAccessCommand request, CancellationToken cancellationToken)
         {
             AccessValidator validator = new();
             ValidationResult result = validator.Validate(request);
@@ -34,15 +28,15 @@ namespace Application.Atms.Commands
             {
                 List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
                 string errorMessage = string.Join("\n", errors);
-                return (null, errorMessage);
+                return Result.Failure<AtmAccessCommand>(errorMessage);
             }
 
-            var user = await new GetUserByAccountNumberQueryHandler(_context).Handle(new GetUserByAccountNumberQuery{AccountNumber= request.AccountNumber}, cancellationToken);
+            var user = await new GetUserByAccountNumberQueryHandler(_context).Handle(new GetUserByAccountNumberQuery { AccountNumber = request.AccountNumber }, cancellationToken);
 
             if (user != null && user.Pin == request.Pin)
             {
                 var token = _jwtTokenService.GenerateATmToken(user.AccountNumber);
-                return (token, null);
+                return Result.Success(token, "ATM token generated successfully.");
             }
 
             var admin = await new GetAdminByAccountNumberQueryHandler(_context).Handle(new GetAdminByAccountNumberQuery{AccountNumber = request.AccountNumber}, cancellationToken);
@@ -50,10 +44,10 @@ namespace Application.Atms.Commands
             if (admin != null && admin.Pin == request.Pin)
             {
                 var token = _jwtTokenService.GenerateATmToken(admin.AccountNumber);
-                return (token, null);
+                return Result.Success(token, "ATM token generated successfully.");
             }
 
-            return (null, "Invalid account number or PIN.");
+            return Result.Failure<AtmAccessCommand>("Invalid account number or PIN.");
         }
     }
 }

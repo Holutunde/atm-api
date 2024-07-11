@@ -1,28 +1,27 @@
+using Application.Common.ResultsModel;
+using Application.Interfaces;
 using MediatR;
-using Domain.Entities;
-using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Queries
 {
-    public class GetAllUsersQuery : IRequest<List<User>>
+    public class GetAllUsersQuery : IRequest<Result>
     {
     }
 
-    public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, List<User>>
+    public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public GetAllUsersQueryHandler(DataContext context)
+        public GetAllUsersQueryHandler(IDataContext context)
         {
             _context = context;
         }
 
-        public async Task<List<User>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
         {
-            // Retrieve all users from the database
             var users = await _context.Users.ToListAsync(cancellationToken);
-            return users;
+            return Result.Success(users, $"Total users found: {users.Count}");
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿using Domain.Enum;
-
+﻿
 namespace Domain.Entities
 {
-    public class User
+    public class User : IAccount
     {
         public int Id { get; set; }
         public string Email { get; set; }
@@ -13,6 +12,7 @@ namespace Domain.Entities
         public int Pin { get; set; }
         public double Balance { get; set; }
         public DateTime OpeningDate { get; set; }
-        public string Role { get; set; } = Roles.User.ToString();
+        public string Role { get; set; } 
     }
+     
 }

@@ -1,13 +1,6 @@
-using Application.Admins.Commands;
-using Application.Admins.Queries;
-using Application.Atms.Commands;
 using Application.Dto;
+using Application.Interfaces;
 using Application.Online.Commands;
-using Application.Transactions.Commands;
-using Application.Users.Commands;
-using Application.Users.Queries;
-using Domain.Entities;
-using Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,33 +9,18 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/transactions")]
-    public class OnlineTransactionController : ControllerBase
+    public class OnlineTransactionController(
+       IMediator mediator, IGetEmailService getEmailService) : ControllerBase
     {
-        private readonly IMediator _mediator;
-        private readonly GetEmailService _getEmailService;
+        private readonly IMediator _mediator = mediator;
 
-        public OnlineTransactionController(
-           IMediator mediator,
-           GetEmailService getEmailService)
-        {
-            _mediator = mediator;
-            _getEmailService = getEmailService;
-        }
+        private readonly IGetEmailService _getEmailService = getEmailService;
 
         private string GetCurrentEmail()
         {
             return _getEmailService.GetEmailFromToken(User);
         }
 
-        private async Task<User> GetCurrentUserByEmail(string email)
-        {
-            return await _mediator.Send(new GetUserByEmailQuery { Email = email });
-        }
-
-        private async Task<Admin> GetCurrentAdminByEmail(string email)
-        {
-            return await _mediator.Send(new GetAdminByEmailQuery { Email = email });
-        }
 
         [Authorize]
         [HttpGet("checkBalance")]
@@ -53,12 +31,7 @@ namespace Api.Controllers
                 var email = GetCurrentEmail();
 
                 var command = new CheckBalanceOnlineCommand { Email = email };
-                var (balance, errorMessage) = await _mediator.Send(command);
-
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    return Unauthorized();
-                }
+                var balance  = await _mediator.Send(command);
 
                 return Ok(new { balance });
             }
@@ -76,14 +49,9 @@ namespace Api.Controllers
             {
                 var email = GetCurrentEmail();
                 var command = new DepositOnlineCommand { Email = email, Amount = depositDto.Amount };
-                var (balance, errorMessage) = await _mediator.Send(command);
+                var balance = await _mediator.Send(command);
 
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    return Unauthorized();
-                }
-
-                return Ok(new { balance });
+                return Ok(balance);
             }
             catch (Exception ex)
             {
@@ -99,18 +67,9 @@ namespace Api.Controllers
             {
                 var email = GetCurrentEmail();
                 var command = new TransferOnlineCommand { SenderEmail = email, ReceiverAccountNumber = transferDto.ReceiverAccountNumber, Amount = transferDto.Amount };
-                var (senderBalance, receiverBalance, errorMessage) = await _mediator.Send(command);
+                var senderBalance= await _mediator.Send(command);
 
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    if (errorMessage == "Unauthorized" || errorMessage == "Insufficient balance.")
-                    {
-                        return BadRequest(errorMessage);
-                    }
-                    return NotFound(errorMessage);
-                }
-
-                return Ok(new { senderBalance, receiverBalance });
+                return Ok(senderBalance);
             }
             catch (Exception ex)
             {
@@ -126,12 +85,7 @@ namespace Api.Controllers
             {
                 var email = GetCurrentEmail();
                 var command = new ChangePinOnlineCommand { Email = email, NewPin = changePinDto.NewPin };
-                var errorMessage = await _mediator.Send(command);
-
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    return Unauthorized();
-                }
+                await _mediator.Send(command);
 
                 return NoContent();
             }

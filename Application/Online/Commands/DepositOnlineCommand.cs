@@ -1,31 +1,33 @@
 using Application.Admins.Commands;
 using Application.Admins.Queries;
+using Application.Atms.Commands;
+using Application.Common.ResultsModel;
 using Application.Transactions.Commands;
 using Application.Users.Commands;
 using Application.Users.Queries;
-using Domain.Entities;
-using Infrastructure.Data;
+using Application.Interfaces;
+
 using MediatR;
 
 
 namespace Application.Online.Commands
 {
-    public class DepositOnlineCommand : IRequest<(double? Balance, string ErrorMessage)>
+    public class DepositOnlineCommand : IRequest<Result>
     {
-        public string  Email { get; set; }
+        public required string  Email { get; set; }
         public double Amount { get; set; }
     }
 
-    public class DepositOnlineCommandHandler : IRequestHandler<DepositOnlineCommand, (double? Balance, string ErrorMessage)>
+    public class DepositOnlineCommandHandler : IRequestHandler<DepositOnlineCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public DepositOnlineCommandHandler(DataContext context)
+        public DepositOnlineCommandHandler(IDataContext context)
         {
             _context = context;
         }
 
-        public async Task<(double? Balance, string ErrorMessage)> Handle(DepositOnlineCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(DepositOnlineCommand request, CancellationToken cancellationToken)
         {
 
             var user = await new GetUserByEmailQueryHandler(_context).Handle(new GetUserByEmailQuery { Email = request.Email }, cancellationToken);
@@ -34,7 +36,7 @@ namespace Application.Online.Commands
 
 
             if (user == null && admin == null)
-                return (null, "Unauthorized");
+                return Result.Failure<DepositCommand>("Unauthorized");
 
             if (user != null)
             {
@@ -49,19 +51,13 @@ namespace Application.Online.Commands
 
             var accountNumber = user?.AccountNumber ?? admin.AccountNumber;
 
-            Transaction transaction = new()
-            {
-
-                ReceiverAccountNumber = accountNumber,
+      
+            await new CreateTransactionCommandHandler(_context).Handle(new CreateTransactionCommand {  ReceiverAccountNumber = accountNumber,
                 Amount = request.Amount,
-                TransactionDate = DateTime.UtcNow,
-                TransactionType = "Transfer"
-            };
-
-            await new CreateTransactionCommandHandler(_context).Handle(new CreateTransactionCommand { Transaction = transaction }, cancellationToken);
+                TransactionType = "Deposit" }, cancellationToken);
 
 
-            return (user?.Balance ?? admin?.Balance, null);
+            return Result.Success(user?.Balance ?? admin.Balance, "Deposit successful.");
         }
     }
 }

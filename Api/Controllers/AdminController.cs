@@ -1,3 +1,4 @@
+using Application.Common.ResultsModel;
 using Application.Admins.Commands;
 using Application.Admins.Queries;
 using Application.Users.Commands;
@@ -10,14 +11,9 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/admin")]
-    public class AdminController : ControllerBase
+    public class AdminController(IMediator mediator) : ControllerBase
     {
-        private readonly IMediator _mediator;
-
-        public AdminController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
+        private readonly IMediator _mediator = mediator;
 
         [HttpPost("register")]
         public async Task<IActionResult> CreateAdmin([FromBody] RegisterAdminCommand command)
@@ -25,31 +21,26 @@ namespace Api.Controllers
             try
             {
                 var createdAdmin = await _mediator.Send(command);
-                return Ok(new { createdAdmin });
+                return Ok(createdAdmin);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<RegisterAdminCommand>(ex.Message));
             }
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginAdminQuery query)
+        public async Task<IActionResult> Login([FromBody] LoginAdminCommand command)
         {
             try
             {
-                var (admin, token) = await _mediator.Send(query);
+                var token = await _mediator.Send(command);
 
-                if (admin == null)
-                {
-                    return Unauthorized("Invalid credentials.");
-                }
-
-                return Ok(new { admin, token });
+                return Ok (token );
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<LoginAdminCommand>(ex.Message));
             }
         }
 
@@ -64,44 +55,38 @@ namespace Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<UpdateAdminCommand>( ex.Message));
             }
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("getAdminDetails")]
-        public async Task<IActionResult> GetAdminById([FromBody] GetAdminByIdQuery query)
+        public async Task<IActionResult> GetAdminById([FromQuery] GetAdminByIdQuery query)
         {
             try
             {
                 var admin = await _mediator.Send(query);
 
-                if (admin == null)
-                {
-                    return NotFound("Admin not found.");
-                }
-
                 return Ok(admin);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<GetAdminByIdQuery>( ex.Message));
             }
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("getAllAdmins")]
-        public async Task<IActionResult> GetAllAdmins()
+        public async Task<IActionResult> GetAllAdmins([FromQuery] GetAllAdminsQuery query)
         {
             try
             {
-                var query = new GetAllAdminsQuery();
                 var admins = await _mediator.Send(query);
-                return Ok(new { admins, totalAdmins = admins.Count });
+                return Ok(admins);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<GetAllAdminsQuery>( ex.Message));
             }
         }
 
@@ -113,11 +98,11 @@ namespace Api.Controllers
             {
                 var query = new GetAllUsersQuery();
                 var users = await _mediator.Send(query);
-                return Ok(new { users, totalUsers = users.Count });
+                return Ok(users);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<GetAllUsersQuery>(ex.Message));
             }
         }
 
@@ -127,20 +112,13 @@ namespace Api.Controllers
         {
             try
             {
-                var result = await _mediator.Send(new DeleteAdminCommand { Id = id });
+             await _mediator.Send(new DeleteAdminCommand { Id = id });
 
-                if (result)
-                {
-                    return Ok($"User with ID {id} deleted successfully.");
-                }
-                else
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
+            return NoContent();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<DeleteAdminCommand>( ex.Message));
             }
         }
 
@@ -150,21 +128,14 @@ namespace Api.Controllers
         {
             try
             {
-                var command = new DeleteUserCommand { Id = id };
-                var result = await _mediator.Send(command);
+               var command = new DeleteUserCommand { Id = id };
+               await _mediator.Send(command);
 
-                if (result)
-                {
-                    return Ok($"User with ID {id} deleted successfully.");
-                }
-                else
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
+                return NoContent();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, Result.Failure<DeleteUserCommand>( ex.Message));
             }
         }
     }

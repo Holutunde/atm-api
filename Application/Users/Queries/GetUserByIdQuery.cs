@@ -1,27 +1,32 @@
+using Application.Common.ResultsModel;
+using Application.Interfaces;
 using MediatR;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
-using Domain.Entities;
+
 
 namespace Application.Users.Queries
 {
-    public class GetUserByIdQuery : IRequest<User>
+    public class GetUserByIdQuery : IRequest<Result>
     {
         public int Id { get; set; }
     }
 
-    public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, User>
+    public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public GetUserByIdQueryHandler(DataContext context)
+        public GetUserByIdQueryHandler(IDataContext context)
         {
             _context = context;
         }
 
-        public async Task<User> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
-            return await _context.Users.FindAsync(request.Id);
+            var user = await _context.Users.FindAsync(request.Id);
+            if (user != null)
+            {
+                return Result.Success(user, "User found.");
+            }
+            return Result.Failure<GetUserByIdQuery>($"User with ID {request.Id} not found.");
         }
     }
 }

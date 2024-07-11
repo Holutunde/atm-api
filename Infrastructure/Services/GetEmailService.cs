@@ -1,8 +1,9 @@
 using System.Security.Claims;
+using Application.Interfaces;
 
 namespace Infrastructure.Services
 {
-    public class GetEmailService
+    public class GetEmailService: IGetEmailService
     {
         public string GetEmailFromToken(ClaimsPrincipal user)
         {

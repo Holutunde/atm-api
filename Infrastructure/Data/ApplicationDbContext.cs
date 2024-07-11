@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Domain.Entities;
+using Application.Interfaces;
 
 namespace Infrastructure.Data
 {
-    public class DataContext : DbContext
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options), IDataContext
     {
-        public DataContext(DbContextOptions<DataContext> options) : base(options) { }
-
         public DbSet<User> Users { get; set; }
-        public DbSet<Admin> Admins { get; set; }
+        public DbSet<Admin> Admins { get; set; } 
+        
         public DbSet<Transaction> Transactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -16,4 +16,5 @@ namespace Infrastructure.Data
             base.OnModelCreating(modelBuilder);
         }
     }
+    
 }

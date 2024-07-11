@@ -1,5 +1,6 @@
 using Application.Atms.Commands;
 using Application.Dto;
+using Application.Interfaces;
 using Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -9,32 +10,21 @@ namespace Api.Controllers
 {
     [ApiController]
     [Route("api/atm")]
-    public class AtmTransactionController : ControllerBase
+    public class AtmTransactionController(IMediator mediator, IGetEmailService getEmailService) : ControllerBase
     {
-        private readonly IMediator _mediator;
-        private readonly GetEmailService _getEmailService;
-        private readonly JwtTokenService _jwtTokenService;
+        private readonly IMediator _mediator = mediator;
 
-        public AtmTransactionController(IMediator mediator, JwtTokenService jwtTokenService, GetEmailService getEmailService)
-        {
-            _mediator = mediator;
-            _jwtTokenService = jwtTokenService;
-            _getEmailService = getEmailService;
-        }
+        private readonly IGetEmailService _getEmailService = getEmailService;
+      
 
         [HttpPost("access")]
         public async Task<IActionResult> Access([FromBody] AtmAccessCommand command)
         {
             try
             {
-                var (Token, ErrorMessage) = await _mediator.Send(command);
+                var token = await _mediator.Send(command);
 
-                if (ErrorMessage != null)
-                {
-                    return BadRequest(new { error = ErrorMessage });
-                }
-
-                return Ok(new { token = Token });
+                return Ok( token );
             }
             catch (Exception ex)
             {
@@ -50,14 +40,9 @@ namespace Api.Controllers
             {
                 var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
                 var command = new CheckBalanceCommand { AccountNumber = accountNumber };
-                var (balance, errorMessage) = await _mediator.Send(command);
+                var balance = await _mediator.Send(command);
 
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    return Unauthorized();
-                }
-
-                return Ok(new { balance });
+                return Ok(balance);
             }
             catch (Exception ex)
             {
@@ -73,12 +58,7 @@ namespace Api.Controllers
             {
                 var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
                 var command = new DepositCommand { AccountNumber = accountNumber, Amount = depositDto.Amount };
-                var (balance, errorMessage) = await _mediator.Send(command);
-
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    return Unauthorized();
-                }
+                var balance = await _mediator.Send(command);
 
                 return Ok(new { balance });
             }
@@ -96,18 +76,10 @@ namespace Api.Controllers
             {
                 var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
                 var command = new TransferCommand { SenderAccountNumber = accountNumber, ReceiverAccountNumber = transferDto.ReceiverAccountNumber, Amount = transferDto.Amount };
-                var (senderBalance, receiverBalance, errorMessage) = await _mediator.Send(command);
+                var senderBalance = await _mediator.Send(command);
 
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    if (errorMessage == "Unauthorized" || errorMessage == "Insufficient balance.")
-                    {
-                        return BadRequest(errorMessage);
-                    }
-                    return NotFound(errorMessage);
-                }
 
-                return Ok(new { senderBalance, receiverBalance });
+                return Ok(senderBalance);
             }
             catch (Exception ex)
             {
@@ -123,12 +95,8 @@ namespace Api.Controllers
             {
                 var accountNumber = _getEmailService.GetAccountNumberFromToken(User);
                 var command = new ChangePinCommand { AccountNumber = accountNumber, NewPin = changePinDto.NewPin };
-                var errorMessage = await _mediator.Send(command);
 
-                if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    return Unauthorized();
-                }
+                await _mediator.Send(command);
 
                 return NoContent();
             }

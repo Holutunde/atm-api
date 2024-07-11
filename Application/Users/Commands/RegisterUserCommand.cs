@@ -1,13 +1,15 @@
+using Application.Common.ResultsModel;
+using Application.Validator;
 using Domain.Entities;
 using FluentValidation;
 using FluentValidation.Results;
-using Infrastructure.Data;
+using Application.Interfaces;
 using MediatR;
 
 
 namespace Application.Admins.Commands
 {
-    public class RegisterUserCommand : IRequest<User>
+    public class RegisterUserCommand : IRequest<Result>
     {
         public string Email { get; set; }
         public string Password { get; set; }
@@ -15,48 +17,30 @@ namespace Application.Admins.Commands
         public string LastName { get; set; }
         public int Pin { get; set; }
     }
-
-    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, User>
+    public class RegisterUserCommandHandler(IDataContext context, IValidator<RegisterUserCommand> validator, IAccountFactory accountFactory) : IRequestHandler<RegisterUserCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context = context;
+        private readonly IAccountFactory _accountFactory = accountFactory;
+        private readonly IValidator<RegisterUserCommand> _validator = validator;
 
-        private readonly IValidator<RegisterUserCommand> _validator;
-
-        public RegisterUserCommandHandler(DataContext context, IValidator<RegisterUserCommand> validator)
+        public async Task<Result> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            _context = context;
-            _validator = validator;
-        }
-        public async Task<User> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
-        {
-
+            UserValidator validator = new();
             ValidationResult result = _validator.Validate(request);
 
             if (!result.IsValid)
             {
                 List<string> errors = result.Errors.Select(error => error.ErrorMessage).ToList();
                 string errorMessage = string.Join("\n", errors);
-                throw new ValidationException(errorMessage);
+                return Result.Failure<RegisterAdminCommand>(errorMessage);
             }
 
-            Random random = new();
-            var newUser = new User
-            {
-                Email = request.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Pin = request.Pin,
-                Balance = 0,
-                AccountNumber = (long)(random.NextDouble() * 9000000000L) + 1000000000L,
-                OpeningDate = DateTime.Now,
-                Role = "User"
-            };
+            var newUser = _accountFactory.CreateAccount<User>(request.Email, request.Password, request.FirstName, request.LastName, request.Pin, "User");
 
             await _context.Users.AddAsync(newUser, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return newUser;
+            return Result.Success(newUser, "User registered successfully.");
         }
     }
 }

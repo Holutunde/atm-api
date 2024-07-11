@@ -3,8 +3,10 @@ using Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Application.Interfaces;
 using System.Text;
 using Application;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,12 +14,24 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
+var seqServerUrl = builder.Configuration.GetSection("Seq:ServerUrl").Value;
+
+Log.Logger = new LoggerConfiguration()
+           .MinimumLevel.Information()
+           .WriteTo.Console()
+           .WriteTo.Seq(seqServerUrl) // Read Seq URL from configuration
+           .CreateLogger();
+
+builder.Host.UseSerilog();
+Log.Information("Starting up the service");
+
 builder.Services.AddApplicationServices();
 
 var configuration = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(configuration["Key"]);
 var issuer = configuration["Issuer"];
 var audience = configuration["Audience"];
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -38,7 +52,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddSingleton(new JwtTokenService(configuration["Key"], issuer, audience));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

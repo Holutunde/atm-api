@@ -1,5 +1,5 @@
 using MediatR;
-using Infrastructure.Data;
+using Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Domain.Entities;
 
@@ -12,9 +12,9 @@ namespace Application.Users.Queries
 
     public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, User>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public GetUserByEmailQueryHandler(DataContext context)
+        public GetUserByEmailQueryHandler(IDataContext context)
         {
             _context = context;
         }

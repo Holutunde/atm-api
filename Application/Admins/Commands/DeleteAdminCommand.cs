@@ -1,23 +1,20 @@
-using Infrastructure.Data;
+using Application.Common.ResultsModel;
+using Application.Interfaces;
 using MediatR;
+
 
 namespace Application.Admins.Commands
 {
-    public class DeleteAdminCommand : IRequest<bool>
+    public class DeleteAdminCommand : IRequest<Result>
     {
         public int Id { get; set; }
     }
 
-    public class DeleteAdminCommandHandler : IRequestHandler<DeleteAdminCommand, bool>
+    public class DeleteAdminCommandHandler(IDataContext context) : IRequestHandler<DeleteAdminCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context = context;
 
-        public DeleteAdminCommandHandler(DataContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<bool> Handle(DeleteAdminCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(DeleteAdminCommand request, CancellationToken cancellationToken)
         {
             var admin = await _context.Admins.FindAsync(request.Id);
 
@@ -25,10 +22,10 @@ namespace Application.Admins.Commands
             {
                 _context.Admins.Remove(admin);
                 await _context.SaveChangesAsync(cancellationToken);
-                return true;
+                return Result.Success($"Admin with ID {request.Id} deleted successfully.");
             }
 
-            return false;
+            return Result.Failure<DeleteAdminCommand>($"Admin with ID {request.Id} not found.");
         }
     }
 }

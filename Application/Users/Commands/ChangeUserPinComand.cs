@@ -1,34 +1,38 @@
 using MediatR;
-using Infrastructure.Data;
+using Application.Interfaces;
+using Application.Common.ResultsModel;
 
 
 namespace Application.Users.Commands
 {
-    public class ChangeUserPinCommand : IRequest<int>
+    public class ChangeUserPinCommand : IRequest<Result>
     {
         public int Id { get; set; }
         public int NewPin { get; set; }
     }
 
-    public class ChangeUserPinCommandHandler : IRequestHandler<ChangeUserPinCommand, int>
+    public class ChangeUserPinCommandHandler : IRequestHandler<ChangeUserPinCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public ChangeUserPinCommandHandler(DataContext context)
+        public ChangeUserPinCommandHandler(IDataContext context)
         {
             _context = context;
         }
 
-        public async Task<int> Handle(ChangeUserPinCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(ChangeUserPinCommand request, CancellationToken cancellationToken)
         {
             var user = await _context.Users.FindAsync(request.Id);
-            if (user != null)
+            if (user == null)
             {
-                user.Pin = request.NewPin;
-                await _context.SaveChangesAsync(cancellationToken);
+                return Result.Failure<ChangeUserPinCommand>($"User with id {request.Id} not found.");
             }
 
-            return user.Pin;
+            user.Pin = request.NewPin;
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Result.Success(user.Pin);
         }
     }
+
 }

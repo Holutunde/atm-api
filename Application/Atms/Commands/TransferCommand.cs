@@ -1,48 +1,48 @@
 using Application.Admins.Commands;
 using Application.Admins.Queries;
+using Application.Common.ResultsModel;
 using Application.Transactions.Commands;
 using Application.Users.Commands;
 using Application.Users.Queries;
-using Domain.Entities;
-using Infrastructure.Data;
+using Application.Interfaces;
 using MediatR;
 
 namespace Application.Atms.Commands
 {
-    public class TransferCommand : IRequest<(double SenderBalance, double ReceiverBalance, string ErrorMessage)>
+    public class TransferCommand : IRequest<Result>
     {
         public long SenderAccountNumber { get; set; }
         public long ReceiverAccountNumber { get; set; }
         public double Amount { get; set; }
     }
 
-    public class TransferCommandHandler : IRequestHandler<TransferCommand, (double SenderBalance, double ReceiverBalance, string ErrorMessage)>
+    public class TransferCommandHandler : IRequestHandler<TransferCommand, Result>
     {
-        private readonly DataContext _context;
+        private readonly IDataContext _context;
 
-        public TransferCommandHandler(DataContext context)
+        public TransferCommandHandler(IDataContext context)
         {
             _context = context;
         }
 
-        public async Task<(double SenderBalance, double ReceiverBalance, string ErrorMessage)> Handle(TransferCommand request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(TransferCommand request, CancellationToken cancellationToken)
         {
             var sender = await new GetUserByAccountNumberQueryHandler(_context).Handle(new GetUserByAccountNumberQuery { AccountNumber = request.SenderAccountNumber }, cancellationToken);
             var adminSender = sender == null ? await new GetAdminByAccountNumberQueryHandler(_context).Handle(new GetAdminByAccountNumberQuery { AccountNumber = request.SenderAccountNumber }, cancellationToken) : null;
 
             if (sender == null && adminSender == null)
-                return (0, 0, "Unauthorized");
+                return Result.Failure<TransferCommand>("Unauthorized");
 
             var senderBalance = sender?.Balance ?? adminSender.Balance;
 
             if (sender?.AccountNumber == request.ReceiverAccountNumber || adminSender?.AccountNumber == request.ReceiverAccountNumber)
             {
-                return (0, 0, "Sender and receiver account numbers cannot be the same.");
+                return Result.Failure<TransferCommand>("Sender and receiver account numbers cannot be the same.");
             }
 
             if (senderBalance < request.Amount)
             {
-                return (0, 0, "Insufficient balance.");
+                return Result.Failure<TransferCommand>("Insufficient balance.");
             }
 
             var receiverUser = await new GetUserByAccountNumberQueryHandler(_context).Handle(new GetUserByAccountNumberQuery { AccountNumber = request.ReceiverAccountNumber }, cancellationToken);
@@ -50,7 +50,7 @@ namespace Application.Atms.Commands
 
             if (receiverUser == null && receiverAdmin == null)
             {
-                return (0, 0, "Receiver account not found.");
+                return Result.Failure<TransferCommand>("Receiver account not found.");
             }
 
             if (sender != null)
@@ -75,18 +75,17 @@ namespace Application.Atms.Commands
                 await new UpdateAdminBalanceCommandHandler(_context).Handle(new UpdateAdminBalanceCommand { Id = receiverAdmin.Id, NewBalance = receiverAdmin.Balance }, cancellationToken);
             }
 
-            Transaction transaction = new()
+      
+
+            await new CreateTransactionCommandHandler(_context).Handle(new CreateTransactionCommand
             {
                 SenderAccountNumber = sender?.AccountNumber ?? adminSender.AccountNumber,
                 ReceiverAccountNumber = request.ReceiverAccountNumber,
                 Amount = request.Amount,
-                TransactionDate = DateTime.UtcNow,
                 TransactionType = "Transfer"
-            };
+            }, cancellationToken);
 
-            await new CreateTransactionCommandHandler(_context).Handle(new CreateTransactionCommand { Transaction = transaction }, cancellationToken);
-
-            return (sender?.Balance ?? adminSender.Balance, receiverUser?.Balance ?? receiverAdmin.Balance, null);
+            return Result.Success(sender?.Balance ?? adminSender.Balance, "New Balance");
         }
     }
 }

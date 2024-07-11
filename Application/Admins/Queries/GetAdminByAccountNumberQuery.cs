@@ -1,5 +1,5 @@
 using Domain.Entities;
-using Infrastructure.Data;
+using Application.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,14 +11,9 @@ namespace Application.Admins.Queries
         public long AccountNumber { get; set; }
     }
 
-    public class GetAdminByAccountNumberQueryHandler : IRequestHandler<GetAdminByAccountNumberQuery, Admin>
+    public class GetAdminByAccountNumberQueryHandler(IDataContext context) : IRequestHandler<GetAdminByAccountNumberQuery, Admin>
     {
-        private readonly DataContext _context;
-
-        public GetAdminByAccountNumberQueryHandler(DataContext context)
-        {
-            _context = context;
-        }
+        private readonly IDataContext _context = context;
 
         public async Task<Admin> Handle(GetAdminByAccountNumberQuery request, CancellationToken cancellationToken)
         {
@@ -26,3 +21,5 @@ namespace Application.Admins.Queries
         }
     }
 }
+
+
