@@ -1,8 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "e+s5DGS9zdLrxXSgNFwHoi7PCE6PTZ6iatZnwjXFPi7RYvsM16FUgz2ySgwP0Dx0Mb1yyA1tP8JcdgJBxAcP/Q==",
+  "dgSpecHash": "Z0bHDznNJsED0yRRHbcw4P9U15e5fBuQLR7jzD51FPfAhny+A7PTM5sQwUc3iboHXVKbU6xr7E/QBxjUrwrpjg==",
   "success": true,
   "projectFilePath": "/Users/apple/Documents/Programming Coding/C#/ATMAPI/Src/Domain/Domain.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/apple/.nuget/packages/microsoft.aspnetcore.cryptography.internal/8.0.6/microsoft.aspnetcore.cryptography.internal.8.0.6.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.aspnetcore.cryptography.keyderivation/8.0.6/microsoft.aspnetcore.cryptography.keyderivation.8.0.6.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.caching.abstractions/8.0.0/microsoft.extensions.caching.abstractions.8.0.0.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.dependencyinjection/8.0.0/microsoft.extensions.dependencyinjection.8.0.0.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.0/microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.identity.core/8.0.6/microsoft.extensions.identity.core.8.0.6.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.identity.stores/8.0.6/microsoft.extensions.identity.stores.8.0.6.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.logging/8.0.0/microsoft.extensions.logging.8.0.0.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.0/microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.options/8.0.2/microsoft.extensions.options.8.0.2.nupkg.sha512",
+    "/Users/apple/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512"
+  ],
   "logs": []
 }

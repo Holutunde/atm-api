@@ -1,7 +1,7 @@
 using FluentValidation;
-using Application.Admins.Commands;
+using Application.Users.Commands;
 
-namespace Application.Validator
+namespace Application.Users
 {
     public class UserValidator : AbstractValidator<RegisterUserCommand>
     {
@@ -24,12 +24,14 @@ namespace Application.Validator
                 .NotEmpty().WithMessage("Last name is required")
                 .Must(IsValidName).WithMessage("{PropertyName} contains invalid character");
 
-      
             RuleFor(user => user.Pin)
                 .NotEmpty()
                 .Must(pin => pin.ToString().Length == 4)
                 .WithMessage("Invalid PIN length. PIN must be 4 digits");
 
+            RuleFor(user => user.Role)
+                .NotEmpty().WithMessage("Role is required")
+                .Must(role => role == "Admin" || role == "User").WithMessage("Invalid role specified. Allowed roles are Admin and User");
         }
 
         protected bool IsValidName(string name)

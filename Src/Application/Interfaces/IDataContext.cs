@@ -6,9 +6,8 @@ namespace Application.Interfaces
 {
     public interface IDataContext
     {
-        DbSet<User> Users { get; set; }
-        DbSet<Admin> Admins { get; set; }
+        DbSet<ApplicationUser> Users { get; set; }
         DbSet<Transaction> Transactions { get; set; }
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

@@ -1,32 +1,34 @@
 using Application.Common.ResultsModel;
-using Application.Interfaces;
+using Domain.Entities;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 
 
 namespace Application.Users.Queries
 {
     public class GetUserByIdQuery : IRequest<Result>
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
     }
 
     public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, Result>
     {
-        private readonly IDataContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public GetUserByIdQueryHandler(IDataContext context)
+        public GetUserByIdQueryHandler(UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _userManager = userManager;
         }
 
         public async Task<Result> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(request.Id);
-            if (user != null)
+            ApplicationUser? user = await _userManager.FindByIdAsync(request.Id);
+            if (user == null)
             {
-                return Result.Success(user, "User found.");
+                return Result.Failure<GetUserByIdQuery>("User not found.");
             }
-            return Result.Failure<GetUserByIdQuery>($"User with ID {request.Id} not found.");
+
+            return Result.Success(user);
         }
     }
 }

@@ -1,16 +1,19 @@
+using Application.Common.ResultsModel;
 using MediatR;
-using Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
+using System.Threading.Tasks;
+using Application.Interfaces;
 using Domain.Entities;
 
 namespace Application.Users.Queries
 {
-    public class GetUserByAccountNumberQuery : IRequest<User>
+    public class GetUserByAccountNumberQuery : IRequest<Result>
     {
         public long AccountNumber { get; set; }
     }
 
-    public class GetUserByAccountNumberQueryHandler : IRequestHandler<GetUserByAccountNumberQuery, User>
+    public class GetUserByAccountNumberQueryHandler : IRequestHandler<GetUserByAccountNumberQuery, Result>
     {
         private readonly IDataContext _context;
 
@@ -19,9 +22,15 @@ namespace Application.Users.Queries
             _context = context;
         }
 
-        public async Task<User> Handle(GetUserByAccountNumberQuery request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(GetUserByAccountNumberQuery request, CancellationToken cancellationToken)
         {
-            return await _context.Users.SingleOrDefaultAsync(u => u.AccountNumber == request.AccountNumber, cancellationToken);
+            ApplicationUser? user = await _context.Users.SingleOrDefaultAsync(u => u.AccountNumber == request.AccountNumber, cancellationToken);
+            if (user == null)
+            {
+                return Result.Failure<GetUserByAccountNumberQuery>("User not found.");
+            }
+
+            return Result.Success(user);
         }
     }
 }

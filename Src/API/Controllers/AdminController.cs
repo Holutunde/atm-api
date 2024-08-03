@@ -1,142 +1,93 @@
-using Application.Common.ResultsModel;
-using Application.Admins.Commands;
-using Application.Admins.Queries;
 using Application.Users.Commands;
-using Application.Users.Queries;
+//using Application.Users.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Application.Users.Queries;
 
-namespace Api.Controllers
+namespace API.Controllers
 {
     [ApiController]
-    [Route("api/admin")]
-    public class AdminController(IMediator mediator) : ControllerBase
+    [Authorize(Roles = "Admin")]
+    [Route("api/users")]
+    public class AdminController : ControllerBase
     {
-        private readonly IMediator _mediator = mediator;
+        private readonly IMediator _mediator;
 
-        [HttpPost("register")]
-        public async Task<IActionResult> CreateAdmin([FromBody] RegisterAdminCommand command)
+        public AdminController(IMediator mediator)
         {
-            try
-            {
-                var createdAdmin = await _mediator.Send(command);
-                return Ok(createdAdmin);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<RegisterAdminCommand>(ex.Message));
-            }
+            _mediator = mediator;
+        }
+        
+
+        // Get user by ID
+        [HttpGet("id/{id}")]
+        public async Task<IActionResult> GetById(string id)
+        {
+            var query = new GetUserByIdQuery { Id = id };
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        
+        //Get user by email
+        [HttpGet("email/{email}")]
+        public async Task<IActionResult> GetByEmail(string email)
+        {
+            var query = new GetUserByEmailQuery { Email = email };
+            var result = await _mediator.Send(query);
+            return Ok(result);;
+        }
+        
+        // Get user by account number
+        [HttpGet("accountnumber/{accountNumber}")]
+        public async Task<IActionResult> GetByAccountNumber(long accountNumber)
+        {
+            var query = new GetUserByAccountNumberQuery() { AccountNumber = accountNumber };
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        
+            
+        }
+        
+        [HttpPost("unlock/{email}")]
+        public async Task<IActionResult> UnlockUser(string email)
+        {
+            
+            var command = new UnlockUserCommand() { Email = email };
+            var result = await _mediator.Send(command);
+            return Ok(result);
+           
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginAdminCommand command)
+        [HttpGet("all-users")]
+        public async Task<IActionResult> GetAllUsersByUserRole()
         {
-            try
-            {
-                var token = await _mediator.Send(command);
-
-                return Ok (token );
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<LoginAdminCommand>(ex.Message));
-            }
+            var result = await _mediator.Send(new GetAllUsersByUserRoleQuery());
+            return Ok(result);
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpPut("updateAdminDetails")]
-        public async Task<IActionResult> UpdateAdmin([FromBody] UpdateAdminCommand command)
+        [HttpGet("all-admins")]
+        public async Task<IActionResult> GetAllUsersByAdminRole()
         {
-            try
-            {
-                var updatedAdmin = await _mediator.Send(command);
-                return Ok(updatedAdmin);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<UpdateAdminCommand>( ex.Message));
-            }
+            var result = await _mediator.Send(new GetAllUsersByAdminRoleQuery());
+            return Ok(result);
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpGet("getAdminDetails")]
-        public async Task<IActionResult> GetAdminById([FromQuery] GetAdminByIdQuery query)
+        // Update user balance
+        [HttpPut("update-balance")]
+        public async Task<IActionResult> UpdateBalance(UpdateUserBalanceCommand command)
         {
-            try
-            {
-                var admin = await _mediator.Send(query);
-
-                return Ok(admin);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<GetAdminByIdQuery>( ex.Message));
-            }
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
-
-        [Authorize(Roles = "Admin")]
-        [HttpGet("getAllAdmins")]
-        public async Task<IActionResult> GetAllAdmins([FromQuery] GetAllAdminsQuery query)
+        
+        // Delete a user
+        [HttpDelete("{email}")]
+        public async Task<IActionResult> Delete(string email)
         {
-            try
-            {
-                var admins = await _mediator.Send(query);
-                return Ok(admins);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<GetAllAdminsQuery>( ex.Message));
-            }
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpGet("getAllUsers")]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            try
-            {
-                var query = new GetAllUsersQuery();
-                var users = await _mediator.Send(query);
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<GetAllUsersQuery>(ex.Message));
-            }
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("deleteAdmin")]
-        public async Task<IActionResult> DeleteAdmin([FromBody] int id)
-        {
-            try
-            {
-             await _mediator.Send(new DeleteAdminCommand { Id = id });
-
-            return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<DeleteAdminCommand>( ex.Message));
-            }
-        }
-
-        [Authorize(Roles = "Admin")]
-        [HttpDelete("deleteUser")]
-        public async Task<IActionResult> DeleteUser([FromBody] int id)
-        {
-            try
-            {
-               var command = new DeleteUserCommand { Id = id };
-               await _mediator.Send(command);
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, Result.Failure<DeleteUserCommand>( ex.Message));
-            }
+            var command = new DeleteUserCommand { Email = email };
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
     }
 }

@@ -1,52 +1,86 @@
 using Application.Common.ResultsModel;
-using Application.Validator;
-using Domain.Entities;
-using FluentValidation;
-using FluentValidation.Results;
+using Application.Extensions;
+using Domain.Entities;  
+using FluentValidation;  
+using FluentValidation.Results; 
 using Application.Interfaces;
-using Application.Users.Queries;
+using Application.User;
 using Domain.Enum;
 using MediatR;
+using Microsoft.AspNetCore.Identity;  
 
+namespace Application.Users.Commands  
+{  
+    public class RegisterUserCommand : IRequest<Result>  
+    {  
+        public string Email { get; set; }  
+        public string Password { get; set; }  
+        public string FirstName { get; set; }  
+        public string LastName { get; set; }  
+        public int Pin { get; set; }  
+        public string Role { get; set; }  
+    }  
 
-namespace Application.Admins.Commands
-{
-    public class RegisterUserCommand : IRequest<Result>
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public int Pin { get; set; }
-    }
-    public class RegisterUserCommandHandler(IDataContext context, IValidator<RegisterUserCommand> validator, IAccountService accountService) : IRequestHandler<RegisterUserCommand, Result>
-    {
-        private readonly IDataContext _context = context;
-        private readonly IAccountService _accountService = accountService;
-        private readonly IValidator<RegisterUserCommand> _validator = validator;
+    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result>  
+    {  
+        private readonly IEmailSender _emailSender;  
+        private readonly UserManager<ApplicationUser> _userManager;  
+        private readonly IValidator<RegisterUserCommand> _validator;
 
-        public async Task<Result> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
-        {
-            ValidationResult result = _validator.Validate(request);
+        public RegisterUserCommandHandler( IEmailSender emailSender,  
+            IValidator<RegisterUserCommand> validator, UserManager<ApplicationUser> userManager)  
+        {  
+            _emailSender = emailSender;  
+            _validator = validator;  
+            _userManager = userManager;  
+        }  
 
-            if (!result.IsValid)
+        public async Task<Result> Handle(RegisterUserCommand request, CancellationToken cancellationToken)  
+        {  
+            // Validate the request
+            ValidationResult validationResult = await request.ValidateAsync(_validator, cancellationToken);
+            if (!validationResult.IsValid)
             {
-                var errors = result.Errors.Select(error => error.ErrorMessage).ToList();
-                var errorMessage = string.Join("\n", errors);
-                return Result.Failure<RegisterAdminCommand>(errorMessage);
+                var errorMessages = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+                return Result.Failure<RegisterUserCommand>(errorMessages);
             }
-            var user = await new GetUserByEmailQueryHandler(_context).Handle(new GetUserByEmailQuery { Email = request.Email }, cancellationToken);
             
-            if (user != null)
-                return Result.Failure<RegisterUserCommand>("Email is registered already");
+            // Check if the email is already registered  
+            ApplicationUser? existingApplicationUser = await _userManager.FindByEmailAsync(request.Email);  
+            if (existingApplicationUser != null)  
+            {  
+                return Result.Failure<RegisterUserCommand>("Email is already registered.");  
+            }  
+            
 
+            // Create a new user object  
+            ApplicationUser newApplicationUser = new ApplicationUser  
+            {  
+                UserName = request.FirstName,  
+                Email = request.Email,  
+                FirstName = request.FirstName,  
+                LastName = request.LastName,  
+                PinHash = UserPinHasher.HashPin(request.Pin),  
+                Role = Enum.Parse<Roles>(request.Role, true), 
+                UserStatus = Status.Active,
+                UserStatusDes = Status.Active.ToString(),
+                RoleDesc = request.Role,  
+                OpeningDate = DateTime.Now,  
+                AccountNumber = UserGenerateAccountNumber.GenerateAccountNumber(),  
+                GuId = Guid.NewGuid()  
+            };  
+            
+                // Create the user  
+                IdentityResult createdUser = await _userManager.CreateAsync(newApplicationUser, request.Password);  
 
-            var newUser = _accountService.CreateAccount<User>(request.Email, request.Password, request.FirstName, request.LastName, request.Pin, Roles.User, Roles.User.ToString());
-
-            await _context.Users.AddAsync(newUser, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return Result.Success(newUser, "User registered successfully.");
-        }
-    }
+                if (createdUser.Succeeded)  
+                {  
+                    await _emailSender.SendEmailAsync(request.Email, "Registration Successful", "Welcome to our service!");  
+                    return Result.Success<RegisterUserCommand>("User registered successfully.", newApplicationUser );  
+                }  
+                
+                return Result.Failure<RegisterUserCommand>("Error occurred while creating the user: ");  
+            
+        }  
+    }  
 }

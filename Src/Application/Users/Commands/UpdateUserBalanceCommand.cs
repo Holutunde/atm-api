@@ -1,36 +1,43 @@
-using MediatR;
-using Application.Interfaces;
 using Application.Common.ResultsModel;
+using MediatR;
+using Microsoft.AspNetCore.Identity;
+using Domain.Entities;
+
 
 namespace Application.Users.Commands
 {
     public class UpdateUserBalanceCommand : IRequest<Result>
     {
-        public int Id { get; set; }
+        public string Email { get; set; }
         public double NewBalance { get; set; }
     }
+
     public class UpdateUserBalanceCommandHandler : IRequestHandler<UpdateUserBalanceCommand, Result>
     {
-        private readonly IDataContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public UpdateUserBalanceCommandHandler(IDataContext context)
+        public UpdateUserBalanceCommandHandler(UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _userManager = userManager;
         }
 
         public async Task<Result> Handle(UpdateUserBalanceCommand request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(new object?[] { request.Id }, cancellationToken: cancellationToken);
+            ApplicationUser? user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                return Result.Failure<UpdateUserBalanceCommand>($"User with id {request.Id} not found.");
+                return Result.Failure<UpdateUserBalanceCommand>("User not found.");
             }
 
             user.Balance = request.NewBalance;
-            await _context.SaveChangesAsync(cancellationToken);
+            
+            IdentityResult updateResult = await _userManager.UpdateAsync(user);  
+            if (!updateResult.Succeeded)  
+            {  
+                return Result.Failure<UpdateUserBalanceCommand>("Failed to update user's balance: ");  
+            }  
 
-            return Result.Success(user.Balance, "User balance updated successfully.");
+            return Result.Success<UpdateUserBalanceCommand>("User balance updated successfully.", user.Balance);
         }
     }
-
 }

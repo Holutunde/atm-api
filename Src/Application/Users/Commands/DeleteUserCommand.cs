@@ -1,35 +1,45 @@
 using Application.Common.ResultsModel;
-using Application.Interfaces;
+using Domain.Entities;
+using Domain.Enum;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application.Users.Commands
 {
     public class DeleteUserCommand : IRequest<Result>
     {
-        public int Id { get; set; }
+        public string Email { get; set; }
     }
+
     public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Result>
     {
-        private readonly IDataContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DeleteUserCommandHandler(IDataContext context)
+        public DeleteUserCommandHandler(UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _userManager = userManager;
         }
 
         public async Task<Result> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(request.Id);
-
+            ApplicationUser? user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                return Result.Failure<DeleteUserCommand>($"User with ID {request.Id} not found.");
+                return Result.Failure<DeleteUserCommand>("User not found.");
             }
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync(cancellationToken);
-            return Result.Success($"User with ID {request.Id} deleted successfully.");
+            // Update the user's status to Inactive
+            user.UserStatus = Status.Inactive;
+            user.UserStatusDes = Status.Inactive.ToString();
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                
+                return Result.Failure<DeleteUserCommand>("Failed to update user status.");
+               
+            }
+            return Result.Success("User status updated to Inactive successfully.");
+    
         }
     }
-
 }

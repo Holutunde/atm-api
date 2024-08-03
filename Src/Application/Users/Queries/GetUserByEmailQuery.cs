@@ -1,29 +1,35 @@
+using Application.Common.ResultsModel;
 using MediatR;
-using Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using System.Threading;
+using System.Threading.Tasks;
 using Domain.Entities;
 
 namespace Application.Users.Queries
 {
-    public class GetUserByEmailQuery : IRequest<User>
+    public class GetUserByEmailQuery : IRequest<Result>
     {
         public string Email { get; set; }
     }
 
-    public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, User>
+    public class GetUserByEmailQueryHandler : IRequestHandler<GetUserByEmailQuery, Result>
     {
-        private readonly IDataContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public GetUserByEmailQueryHandler(IDataContext context)
+        public GetUserByEmailQueryHandler(UserManager<ApplicationUser> userManager)
         {
-            _context = context;
+            _userManager = userManager;
         }
 
-        public async Task<User> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
+        public async Task<Result> Handle(GetUserByEmailQuery request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            ApplicationUser? user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return Result.Failure<GetUserByEmailQuery>("User not found.");
+            }
 
-            return user;
+            return Result.Success(user);
         }
     }
 }

@@ -2,25 +2,39 @@
     <ItemGroup>
         <ProjectReference Include="..\Domain\Domain.csproj" />
         <ProjectReference Include="..\Application\Application.csproj" />
-        
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="13.0.1" />
-        <PackageReference Include="MediatR" Version="11.0.0" />
-        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.6">
+        <PackageReference Include="AutoMapper"
+                          Version="13.0.1" />
+        <PackageReference Include="MediatR"
+                          Version="11.0.0" />
+        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection"
+                          Version="11.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication"
+                          Version="2.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"
+                          Version="8.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore"
+                          Version="8.0.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore"
+                          Version="8.0.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design"
+                          Version="8.0.6">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.6" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.6">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer"
+                          Version="8.0.6" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools"
+                          Version="8.0.6">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.OpenApi" Version="1.6.15" />
+        <PackageReference Include="Microsoft.OpenApi"
+                          Version="1.6.15" />
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Migrations\" />
     </ItemGroup>
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>

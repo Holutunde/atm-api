@@ -1,10 +1,11 @@
-using Application.Admins.Commands;
-using Application.Validator;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System.Reflection;
+using Application.Users;
+using Application.Users.Commands;
+using Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application
 {
@@ -14,13 +15,17 @@ namespace Application
         {
             services.AddMediatR(Assembly.GetExecutingAssembly());
 
-            services.AddTransient<IValidator<RegisterAdminCommand>, AdminValidator>();
             services.AddTransient<IValidator<RegisterUserCommand>, UserValidator>();
+            services.AddTransient<IValidator<UnlockUserCommand>, UnlockUserCommandValidator>();
+
             
             services.AddLogging();
-            
-            // services.AddSingleton<ILoggerFactory, LoggerFactory>();
-            // services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+            //
+            // services.AddIdentityCore<User>(options => { })
+            //     .AddRoles<IdentityRole>()
+            //     .AddSignInManager<SignInManager<User>>()
+            //     .AddUserManager<UserManager<User>>();
+
             
             return services;
         }
