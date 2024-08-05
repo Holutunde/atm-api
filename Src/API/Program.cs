@@ -2,6 +2,7 @@
 using Microsoft.OpenApi.Models;
 using System.Text;
 using API.Filters;
+using API.Helper;
 using Application;
 using Domain.Entities;
 using Infrastructure.Data;
@@ -18,6 +19,7 @@ var issuer = configuration["Issuer"];
 var audience = configuration["Audience"];
 
 builder.Services.AddLogging();
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -125,6 +127,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors();
+
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
 app.UseAuthentication();
