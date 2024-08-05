@@ -128,11 +128,11 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors();
 
-app.UseMiddleware<ExceptionHandlerMiddleware>();
+
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<ExceptionHandlerMiddleware>();
 // app.MapIdentityApi<ApplicationUser>();
 app.MapControllers();
 app.Run();

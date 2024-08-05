@@ -20,12 +20,6 @@ namespace Application
 
             
             services.AddLogging();
-            //
-            // services.AddIdentityCore<User>(options => { })
-            //     .AddRoles<IdentityRole>()
-            //     .AddSignInManager<SignInManager<User>>()
-            //     .AddUserManager<UserManager<User>>();
-
             
             return services;
         }

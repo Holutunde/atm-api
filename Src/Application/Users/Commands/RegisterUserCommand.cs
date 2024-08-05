@@ -43,7 +43,7 @@ namespace Application.Users.Commands
             {
                 var errorMessages = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
                 return Result.Failure<RegisterUserCommand>(errorMessages);
-            }
+            } 
             
             // Check if the email is already registered  
             ApplicationUser? existingApplicationUser = await _userManager.FindByEmailAsync(request.Email);  
