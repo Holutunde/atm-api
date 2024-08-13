@@ -10,8 +10,8 @@ ARG BUILD_CONFIGURATION=Release
 
 WORKDIR /src
 # Copy the .csproj file to the working directory
-COPY ["ATMAPI/Src/API/API.csproj", "ATMAPI/Src/API/"]
-RUN dotnet restore "ATMAPI/Src/API/API.csproj"
+COPY ["Src/API/API.csproj", "Src/API/"]
+RUN dotnet restore "Src/API/API.csproj"
 
 # Copy the rest of the files and build the application
 COPY . .
