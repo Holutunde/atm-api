@@ -8,15 +8,15 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 
 WORKDIR /src 
-COPY ["ATMAPI/ATMAPI.csproj", "ATMAPI/"]
-RUN dotnet restore "ATMAPI/ATMAPI.csproj"
+COPY ["ATMAPI/Src/API/API.csproj", "ATMAPI/"]
+RUN dotnet restore "ATMAPI/Src/API/API.csproj"
 COPY . .
 WORKDIR /src/ATMAPI
-RUN dotnet build "ATMAPI.csproj" -c ${BUILD_CONFIGURATION} -o /app/build
+RUN dotnet build "API.csproj" -c ${BUILD_CONFIGURATION} -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "ATMAPI.csproj" -c ${BUILD_CONFIGURATION} -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "API.csproj" -c ${BUILD_CONFIGURATION} -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
