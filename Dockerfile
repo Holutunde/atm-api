@@ -8,7 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 
 WORKDIR /src 
-COPY ["ATMAPI.csproj", "ATMAPI/"]
+COPY ["ATMAPI/ATMAPI.csproj", "ATMAPI/"]
 RUN dotnet restore "ATMAPI/ATMAPI.csproj"
 COPY . .
 WORKDIR /src/ATMAPI
