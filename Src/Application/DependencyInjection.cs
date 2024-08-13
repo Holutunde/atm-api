@@ -14,10 +14,7 @@ namespace Application
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddMediatR(Assembly.GetExecutingAssembly());
-
-            services.AddTransient<IValidator<RegisterUserCommand>, UserValidator>();
-            services.AddTransient<IValidator<UnlockUserCommand>, UnlockUserCommandValidator>();
-
+            
             
             services.AddLogging();
             

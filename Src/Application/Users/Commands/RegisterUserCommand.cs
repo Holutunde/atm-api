@@ -25,26 +25,18 @@ namespace Application.Users.Commands
     {  
         private readonly IEmailSender _emailSender;  
         private readonly UserManager<ApplicationUser> _userManager;  
-        private readonly IValidator<RegisterUserCommand> _validator;
 
-        public RegisterUserCommandHandler( IEmailSender emailSender,  
-            IValidator<RegisterUserCommand> validator, UserManager<ApplicationUser> userManager)  
+        public RegisterUserCommandHandler( IEmailSender emailSender, UserManager<ApplicationUser> userManager)  
         {  
             _emailSender = emailSender;  
-            _validator = validator;  
             _userManager = userManager;  
         }  
 
         public async Task<Result> Handle(RegisterUserCommand request, CancellationToken cancellationToken)  
         {  
             // Validate the request
-            ValidationResult validationResult = await request.ValidateAsync(_validator, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                var errorMessages = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
-                return Result.Failure<RegisterUserCommand>(errorMessages);
-            } 
-            
+            await request.ValidateAsync(new UserValidator(), cancellationToken);
+          
             // Check if the email is already registered  
             ApplicationUser? existingApplicationUser = await _userManager.FindByEmailAsync(request.Email);  
             if (existingApplicationUser != null)  

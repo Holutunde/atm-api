@@ -15,15 +15,13 @@ namespace ATMAPI.Tests.User.Commands
     public class UnlockUserCommandHandlerTests
     {
         private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
-        private readonly Mock<IValidator<UnlockUserCommand>> _mockValidator;
         private readonly UnlockUserCommandHandler _handler;
 
         public UnlockUserCommandHandlerTests()
         {
             _mockUserManager = UserManagerMock.CreateMockUserManager<ApplicationUser>();
-            _mockValidator = new Mock<IValidator<UnlockUserCommand>>();
 
-            _handler = new UnlockUserCommandHandler(_mockUserManager.Object, _mockValidator.Object);
+            _handler = new UnlockUserCommandHandler(_mockUserManager.Object);
         }
 
         [Fact]
@@ -33,8 +31,6 @@ namespace ATMAPI.Tests.User.Commands
             UnlockUserCommand command = new UnlockUserCommand { Email = "invalid@example.com" };
             var validationFailures = new ValidationFailure[] { new ValidationFailure("Email", "Invalid email format") };
             var validationResult = new ValidationResult(validationFailures);
-            _mockValidator.Setup(v => v.ValidateAsync(command, It.IsAny<CancellationToken>())).ReturnsAsync(validationResult);
-
             // Act
             Result result = await _handler.Handle(command, CancellationToken.None);
 
@@ -48,8 +44,6 @@ namespace ATMAPI.Tests.User.Commands
         {
             // Arrange
             UnlockUserCommand command = new UnlockUserCommand { Email = "nonexistent@example.com" };
-            _mockValidator.Setup(v => v.ValidateAsync(command, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ValidationResult());
             _mockUserManager.Setup(um => um.FindByEmailAsync(command.Email)).ReturnsAsync((ApplicationUser)null);
 
             // Act
@@ -66,8 +60,6 @@ namespace ATMAPI.Tests.User.Commands
             // Arrange
             UnlockUserCommand command = new UnlockUserCommand { Email = "user@example.com" };
             var user = new ApplicationUser { Email = command.Email };
-            _mockValidator.Setup(v => v.ValidateAsync(command, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ValidationResult());
             _mockUserManager.Setup(um => um.FindByEmailAsync(command.Email)).ReturnsAsync(user);
             _mockUserManager.Setup(um => um.ResetAccessFailedCountAsync(user)).ReturnsAsync(IdentityResult.Failed());
 

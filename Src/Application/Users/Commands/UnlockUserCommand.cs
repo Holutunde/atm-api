@@ -16,23 +16,17 @@ namespace Application.Users.Commands
     public class UnlockUserCommandHandler : IRequestHandler<UnlockUserCommand, Result>
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IValidator<UnlockUserCommand> _validator;
 
-        public UnlockUserCommandHandler(UserManager<ApplicationUser> userManager, IValidator<UnlockUserCommand> validator)
+        public UnlockUserCommandHandler(UserManager<ApplicationUser> userManager)
         {
             _userManager = userManager;
-            _validator = validator;
         }
 
         public async Task<Result> Handle(UnlockUserCommand request, CancellationToken cancellationToken)
         {
             // Validate the request
-            ValidationResult validationResult = await request.ValidateAsync(_validator, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                var errorMessages = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
-                return Result.Failure<UnlockUserCommand>(errorMessages);
-            }
+        await request.ValidateAsync(new UnlockUserCommandValidator(), cancellationToken);
+          
 
             // Find the user by email
             ApplicationUser user = await _userManager.FindByEmailAsync(request.Email);

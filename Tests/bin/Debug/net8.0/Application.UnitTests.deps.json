@@ -2006,6 +2006,7 @@
       "xunit.runner.visualstudio/2.5.3": {},
       "Application/1.0.0": {
         "dependencies": {
+          "AutoMapper": "13.0.1",
           "Domain": "1.0.0",
           "FluentValidation": "11.9.2",
           "MediatR": "11.0.0",

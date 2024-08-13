@@ -13,11 +13,11 @@ namespace Domain.Entities
 
         public Guid GuId { get; set; } = Guid.NewGuid();
         
-        public required  string FirstName { get; set; }
+        public string FirstName { get; set; }
         
-        public required string LastName { get; set; }
+        public string LastName { get; set; }
         
-        public required string PinHash { get; set; }
+        public string PinHash { get; set; }
         
         public double Balance { get; set; }
         
@@ -27,11 +27,11 @@ namespace Domain.Entities
 
         public Roles Role { get; set; }
 
-        public required string RoleDesc { get; set; }
+        public string RoleDesc { get; set; }
         
         public Status UserStatus { get; set; }
         
-        public required string UserStatusDes { get; set; }
+        public string UserStatusDes { get; set; }
         
     }
 }
